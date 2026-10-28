@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/mobile.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-title" id="topbarTitle">ホーム</div>
+    <button class="tb-btn" id="hmenuBtn" onclick="openHMenu()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+
+  <!-- DATE BAR -->
+  <div class="daterow">
+    <div class="tb-date" id="dateBar">—</div>
+    <div class="dr-btns">
+      <button class="tb-btn sm" onclick="openFolderModal()">📁</button>
+      <button class="tb-btn sm" onclick="openNotifModal()">🔔</button>
+    </div>
+  </div>
+
+  <!-- PAGES -->
+
+  <!-- HOME -->
+  <div class="page active" id="page-home">
+    <div class="pg-body">
+      <div class="sec-card big" onclick="openBoxDetail('today')">
+        <div class="sec-label"><div class="sec-pip p-now"></div>今日の予定</div>
+        <div id="big-today"></div>
+      </div>
+      <div class="sec-card big" onclick="openBoxDetail('claude')">
+        <div class="sec-label"><div class="sec-pip p-claude"></div>Claudeの進捗状況</div>
+        <div id="big-claude"></div>
+      </div>
+      <div class="sec-card big" onclick="openBoxDetail('todo')">
+        <div class="sec-label"><div class="sec-pip p-todo"></div>TODOリスト</div>
+        <div id="big-todo"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="page" id="page-cal">
+    <div class="box4">
+      <div class="sec-card" onclick="openCurrDetail()"><div class="sec-label"><div class="sec-pip p-now"></div>今の予定</div><div id="home-now-body"></div></div>
+      <div class="sec-card" onclick="openNextDetail()"><div class="sec-label"><div class="sec-pip p-next"></div>次の予定</div><div id="home-next-body"></div></div>
+      <div class="sec-card" onclick="openBoxDetail('todo')"><div class="sec-label"><div class="sec-pip p-todo"></div>TODO</div><div id="home-todo-body"></div></div>
+      <div class="sec-card" onclick="openBoxDetail('claude')"><div class="sec-label"><div class="sec-pip p-claude"></div>Claude</div><div id="home-claude-body"></div></div>
+    </div>
+    <div class="cal-page">
+      <!-- 週ナビ -->
+      <div class="week-nav">
+        <div class="week-nav-top">
+          <button class="wn-month" id="calMonthBtn" onclick="switchCalView(calView==='year'?'day':'year')">— 月</button>
+          <div style="display:flex;gap:6px;align-items:center">
+            <div class="view-tabs" style="display:flex;gap:2px;background:rgba(255,255,255,.1);border-radius:8px;padding:3px">
+              <button class="vt-btn active" id="vt-day" onclick="switchCalView('day')">日</button>
+              <button class="vt-btn" id="vt-week" onclick="switchCalView('week')">週</button>
+              <button class="vt-btn" id="vt-year" onclick="switchCalView('year')">年</button>
+            </div>
+            <div class="wn-arrows">
+              <button class="wn-arr" onclick="navPrev()">‹</button>
+              <button class="wn-arr" onclick="navNext()">›</button>
+            </div>
+          </div>
+        </div>
+        <div class="week-days-row" id="weekDaysRow"></div>
+      </div>
+      <!-- グリッド -->
+      <div class="cal-scroll" id="calScroll">
+        <div class="time-grid" id="timeGrid"></div>
+        <div id="weekGridWrap" style="display:none;flex:1"></div>
+        <div class="year-body" id="yearBody" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLAUDE -->
+  <div class="page" id="page-claude">
+    <div class="pg-body">
+      <!-- Claude進捗 -->
+      <div class="sec-card">
+        <div class="sec-label"><div class="sec-pip p-claude"></div>Claudeの進捗状況</div>
+        <div id="claude-cp-list"></div>
+        <button onclick="openModal('cpAddModal')" style="width:100%;margin-top:8px;padding:9px;background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.2);border-radius:10px;color:var(--t3);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">＋ プロジェクトを追加</button>
+      </div>
+      <!-- トークン・API -->
+      <div class="token-grid">
+        <div class="token-card">
+          <div class="token-label">トークン使用</div>
+          <div class="token-val" id="token-val">—</div>
+          <div class="token-sub">今月の合計</div>
+          <div class="token-track"><div class="token-fill" id="token-bar" style="width:0%"></div></div>
+        </div>
+        <div class="token-card">
+          <div class="token-label">API 使用量</div>
+          <div class="token-val" id="api-val">—</div>
+          <div class="token-sub">今月のリクエスト</div>
+          <div class="token-track"><div class="token-fill" id="api-bar" style="width:0%;background:linear-gradient(90deg,var(--green),var(--c7))"></div></div>
+        </div>
+      </div>
+      <!-- TODO サマリー -->
+      <div class="sec-card" onclick="showPage('todo')" style="cursor:pointer">
+        <div class="sec-label"><div class="sec-pip p-todo"></div>TODO</div>
+        <div id="claude-todo-body"><div class="sec-empty">タスクなし</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TODO & MEMO -->
+  <div class="page" id="page-todo">
+    <div class="pg-body">
+      <!-- 今の予定 & 次の予定 -->
+      <div class="two-col">
+        <div class="sec-card half" onclick="openCurrDetail()" style="cursor:pointer">
+          <div class="sec-label"><div class="sec-pip p-now"></div>今の予定</div>
+          <div id="todo-now-body"><div class="sec-empty">予定なし</div></div>
+        </div>
+        <div class="sec-card half" onclick="openNextDetail()" style="cursor:pointer">
+          <div class="sec-label"><div class="sec-pip p-next"></div>次の予定</div>
+          <div id="todo-next-body"><div class="sec-empty">予定なし</div></div>
+        </div>
+      </div>
+      <!-- TODOリスト -->
+      <div class="sec-card">
+        <div class="sec-label"><div class="sec-pip p-todo"></div>TODO</div>
+        <div class="todo-input-row">
+          <input class="t-input" id="todoInput" placeholder="新しいタスク" type="text" onkeydown="if(event.key==='Enter')addTodo()">
+          <button class="t-add-btn" onclick="addTodo()">追加</button>
+        </div>
+        <div class="todo-list" id="todoList"></div>
+      </div>
+      <!-- メモ -->
+      <div class="sec-card">
+        <div class="sec-label"><div class="sec-pip p-memo"></div>メモ</div>
+        <textarea class="memo-ta" id="memoText" placeholder="ちょっとしたメモ…"></textarea>
+        <button class="memo-save-btn" onclick="saveMemo(event)">保存</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fabBtn">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
+
+<!-- HAMBURGER MENU -->
+<div class="hmenu-overlay" id="hmenuOverlay" onclick="closeHMenu()">
+  <div class="hmenu" onclick="event.stopPropagation()">
+    <button class="hmenu-item" onclick="showPage('home');closeHMenu()"><span class="hi-icon">🏠</span>ホーム</button>
+    <button class="hmenu-item" onclick="showPage('cal');closeHMenu()"><span class="hi-icon">📅</span>カレンダー</button>
+    <button class="hmenu-item" onclick="showPage('claude');closeHMenu()"><span class="hi-icon">🤖</span>Claude進捗</button>
+    <button class="hmenu-item" onclick="showPage('todo');closeHMenu()"><span class="hi-icon">✅</span>TODO & メモ</button>
+    <div class="hmenu-sep"></div>
+    <button class="hmenu-item" onclick="showPage('cal');switchCalView('day');closeHMenu()"><span class="hi-icon">1</span>カレンダー：1日</button>
+    <button class="hmenu-item" onclick="showPage('cal');switchCalView('week');closeHMenu()"><span class="hi-icon">7</span>カレンダー：1週間</button>
+    <button class="hmenu-item" onclick="showPage('cal');switchCalView('year');closeHMenu()"><span class="hi-icon">年</span>カレンダー：1年</button>
+    <div class="hmenu-sep"></div>
+    <button class="hmenu-item" onclick="closeHMenu();openAddEvent()"><span class="hi-icon">➕</span>予定を追加</button>
+    <button class="hmenu-item" onclick="openFolderModal();closeHMenu()"><span class="hi-icon">📁</span>フォルダー</button>
+    <div class="hmenu-sep"></div>
+    <button class="hmenu-item" onclick="closeHMenu();exportData()"><span class="hi-icon">⬇️</span>データを書き出す</button>
+    <button class="hmenu-item" onclick="closeHMenu();importData()"><span class="hi-icon">⬆️</span>データを読み込む</button>
+  </div>
+</div>
+
+<!-- MODALS -->
+
+<!-- Add/Edit Event -->
+<div class="overlay" id="addEventModal" onclick="ovClose(event,'addEventModal')">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title" id="evModalTitle">予定を追加</div>
+      <button class="modal-x" onclick="closeModal('addEventModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="fg"><label>タイトル</label><input class="finput" id="evTitle" placeholder="予定のタイトル" type="text"></div>
+      <div class="fg"><label>開始</label><input class="finput" id="evStart" type="datetime-local"></div>
+      <div class="fg"><label>終了</label><input class="finput" id="evEnd" type="datetime-local"></div>
+      <div class="fg"><label>説明</label><textarea class="finput" id="evDesc" rows="2" placeholder="説明（任意）"></textarea></div>
+      <div class="fg"><label>フォルダー</label>
+        <div class="fpills">
+          <div class="fpill" data-f="important" onclick="pickFolder('important',this)">🔴 重要</div>
+          <div class="fpill" data-f="star" onclick="pickFolder('star',this)">⭐ スター</div>
+          <div class="fpill" data-f="work" onclick="pickFolder('work',this)">💼 仕事</div>
+          <div class="fpill" data-f="personal" onclick="pickFolder('personal',this)">🏠 プライベート</div>
+          <div class="fpill" data-f="health" onclick="pickFolder('health',this)">💚 健康</div>
+        </div>
+      </div>
+      <div class="fg"><label>繰り返し</label>
+        <select class="finput" id="evRepeat">
+          <option value="none">なし</option>
+          <option value="daily">毎日</option>
+          <option value="weekly">毎週</option>
+          <option value="yearly">毎年</option>
+        </select>
+      </div>
+      <div class="fg"><div class="tog-row"><span class="tog-label">通知</span><label class="tog"><input type="checkbox" id="evNotif" checked><span class="tog-sl"></span></label></div></div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="closeModal('addEventModal')">キャンセル</button>
+        <button class="btn btn-prim" onclick="saveEvent()">保存</button>
+      </div>
+      <div id="delEvRow" style="display:none;margin-top:8px">
+        <button class="btn btn-del" style="width:100%" onclick="askDel()">この予定を削除</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Event Detail -->
+<div class="overlay" id="detailModal" onclick="ovClose(event,'detailModal')">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title">予定の詳細</div>
+      <button class="modal-x" onclick="closeModal('detailModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+  </div>
+</div>
+
+<!-- Delete Confirm -->
+<div class="overlay" id="delModal" onclick="ovClose(event,'delModal')">
+  <div class="modal" style="max-width:320px">
+    <div class="modal-body" style="text-align:center;padding:28px 22px 22px">
+      <div class="del-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></div>
+      <div style="font-size:16px;font-weight:700;color:var(--t1);margin-bottom:6px">予定を削除しますか？</div>
+      <div style="font-size:13px;color:var(--t2);margin-bottom:22px" id="delTitle"></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-ghost" style="flex:1" onclick="closeModal('delModal')">キャンセル</button>
+        <button class="btn btn-del" style="flex:1" onclick="doDelete()">削除する</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CP Add/Edit -->
+<div class="overlay" id="cpAddModal" onclick="ovClose(event,'cpAddModal')">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title" id="cpModalTitle">プロジェクトを追加</div>
+      <button class="modal-x" onclick="closeModal('cpAddModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="fg"><label>プロジェクト名</label><input class="finput" id="cpName" placeholder="例：アプリ開発" type="text"></div>
+      <div class="fg"><label>進捗 <span id="cpPctLbl">0</span>%</label><input type="range" id="cpPct" min="0" max="100" value="0" style="width:100%;accent-color:var(--c5)" oninput="document.getElementById('cpPctLbl').textContent=this.value"></div>
+      <div class="fg"><label>メモ</label><input class="finput" id="cpNote" placeholder="作業内容など" type="text"></div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="closeModal('cpAddModal')">キャンセル</button>
+        <button class="btn btn-prim" onclick="saveCP()">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Token Edit -->
+<div class="overlay" id="tokenModal" onclick="ovClose(event,'tokenModal')">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title">使用量を更新</div>
+      <button class="modal-x" onclick="closeModal('tokenModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="fg"><label>トークン使用数（今月）</label><input class="finput" id="tokenInput" placeholder="例：124500" type="number"></div>
+      <div class="fg"><label>APIリクエスト数（今月）</label><input class="finput" id="apiInput" placeholder="例：320" type="number"></div>
+      <div class="fg"><label>トークン上限（省略可）</label><input class="finput" id="tokenMax" placeholder="例：500000" type="number"></div>
+      <div class="fg"><label>APIリクエスト上限（省略可）</label><input class="finput" id="apiMax" placeholder="例：1000" type="number"></div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="closeModal('tokenModal')">キャンセル</button>
+        <button class="btn btn-prim" onclick="saveToken()">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Folder -->
+<div class="overlay" id="folderModal" onclick="ovClose(event,'folderModal')">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title" id="folderModalTitle">フォルダー</div>
+      <button class="modal-x" onclick="closeModal('folderModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body" id="folderModalBody"></div>
+  </div>
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/core.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/events.js"></script>
+<script src="js/lists.js"></script>
+<script src="js/home.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
