@@ -36,3 +36,5 @@ function updateDateBar(){
 }
 
 init();
+Store.start();
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Store.user)Store.sync();});
