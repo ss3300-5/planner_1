@@ -14,6 +14,7 @@ const Store={
     const {data}=await this.sb.auth.getSession();
     this.user=data.session?data.session.user:null;
     if(this.user)await this.sync();
+    setInterval(()=>{if(document.visibilityState==='visible'&&this.user)this.sync();},60000);
   },
   async afterLogin(){
     const {data}=await this.sb.auth.getUser();
