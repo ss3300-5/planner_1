@@ -9,7 +9,9 @@
 |---|---|
 | `index.html` | 画面の骨組み（モバイル版）とスクリプトの読み込み |
 | `css/mobile.css` | モバイル版のスタイル |
-| `js/storage.js` | **データ保存層**（保存先の読み書き・JSON書き出し／読み込み） |
+| `js/config.js` | クラウド保存（Supabase）の接続情報。空ならこの端末のみに保存 |
+| `js/storage.js` | **データ保存層**（端末への保存・Supabase同期・JSON書き出し／読み込み） |
+| `js/account.js` | アカウント／同期の画面 |
 | `js/core.js` | データ・定数・日付ヘルパー・繰り返し予定の展開 |
 | `js/ui.js` | 画面切替・モーダル・メニュー・フォルダー一覧 |
 | `js/calendar.js` | カレンダー（日／週／月の連続スクロール） |
@@ -37,9 +39,20 @@ python3 -m http.server 8000
 
 - 予定などのデータは **ブラウザのlocalStorage** に保存されます。端末・ブラウザ・URLごとに別データで、スマホとPCでは共有されません。
 - メニューの「データを書き出す／読み込む」でJSONバックアップを取れます。個人データなので、書き出したファイルはリポジトリに入れないでください（`.gitignore` で除外済み）。
-- 端末間で自動同期するには、クラウド保存（Supabase / Firebase 等）が別途必要です。`js/storage.js` の `Store` を差し替える想定です。
+- 端末間で自動同期するには、下記の「クラウド保存の設定」を行います（未設定でも端末内保存で動きます）。
+
+## クラウド保存の設定（Supabase）
+
+1. [Supabase](https://supabase.com) でプロジェクトを作成（無料枠の条件は公式で確認）
+2. SQL Editor で `supabase/setup.sql` を実行（**RLSで自分のデータだけ読み書き可能**になります）
+3. Authentication → Providers で Email を有効化（メール確認を使う場合は、URL Configuration の Site URL に公開URLを設定）
+4. Project Settings → API の **Project URL** と **anon public key** を `js/config.js` に貼る（`service_role` キーは絶対に貼らない）
+5. push して公開 → メニューの「アカウント／同期」から新規登録・ログイン
+
+- ログイン後は、変更のたびに自動で同期します。2台で別々に編集した場合は、更新が新しい方が採用されます（個人利用向けの簡易方式）。
+- 端末にもデータを持つので、オフラインでも使えます。
 
 ## これから
 
 - [ ] PC版（`css/pc.css` などを追加）。現状 `core.js` と `storage.js` は画面に依存しない部分。`calendar.js` / `home.js` / `ui.js` / `events.js` はモバイル画面のIDに依存しているため、PC版の着手時にUI部分の分離を行う
-- [ ] クラウド保存（ログイン付き）
+- [x] クラウド保存（Supabase・ログイン付き）
