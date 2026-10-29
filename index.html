@@ -169,6 +169,7 @@
     <button class="hmenu-item" onclick="closeHMenu();openAddEvent()"><span class="hi-icon">➕</span>予定を追加</button>
     <button class="hmenu-item" onclick="openFolderModal();closeHMenu()"><span class="hi-icon">📁</span>フォルダー</button>
     <div class="hmenu-sep"></div>
+    <button class="hmenu-item" onclick="closeHMenu();openAuth()"><span class="hi-icon">☁️</span>アカウント／同期</button>
     <button class="hmenu-item" onclick="closeHMenu();exportData()"><span class="hi-icon">⬇️</span>データを書き出す</button>
     <button class="hmenu-item" onclick="closeHMenu();importData()"><span class="hi-icon">⬆️</span>データを読み込む</button>
   </div>
@@ -293,9 +294,28 @@
   </div>
 </div>
 
+<!-- Account / Sync -->
+<div class="overlay" id="authModal" onclick="ovClose(event,'authModal')">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title">アカウント／同期</div><button class="modal-x" onclick="closeModal('authModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body">
+      <div id="authStatus" style="font-size:13px;color:var(--t2);margin-bottom:12px;white-space:pre-line"></div>
+      <div id="authForm">
+        <div class="fg"><label>メールアドレス</label><input class="finput" id="authEmail" type="email" autocomplete="email"></div>
+        <div class="fg"><label>パスワード（6文字以上）</label><input class="finput" id="authPass" type="password" autocomplete="current-password"></div>
+        <div class="btn-row"><button class="btn btn-ghost" onclick="authSignUp()">新規登録</button><button class="btn btn-prim" onclick="authSignIn()">ログイン</button></div>
+      </div>
+      <div id="authOut" style="display:none"><div class="btn-row"><button class="btn btn-ghost" onclick="Store.sync()">今すぐ同期</button><button class="btn btn-del" onclick="authSignOut()">ログアウト</button></div></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.js"></script>
+<script src="js/config.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/core.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/account.js"></script>
 <script src="js/calendar.js"></script>
 <script src="js/events.js"></script>
 <script src="js/lists.js"></script>
