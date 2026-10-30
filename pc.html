@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Planner</title>
-<script>if(window.matchMedia&&!matchMedia('(min-width:900px)').matches)location.replace('index.html?mobile');</script>
+<script>(function(){try{var p=localStorage.getItem('plannerView');
+if(p==='pc')return;
+if(p==='mobile'||(window.matchMedia&&!matchMedia('(min-width:900px)').matches))location.replace('index.html?mobile');}catch(e){}})();</script>
 <link rel="stylesheet" href="css/pc.css">
 </head>
 <body>
@@ -23,6 +25,8 @@
     <button onclick="openAuth()">アカウント／同期</button>
     <button onclick="exportData()">データを書き出す</button>
     <button onclick="importData()">データを読み込む</button>
+    <button onclick="setViewMode('mobile')">モバイル表示に切り替え</button>
+    <button id="viewAuto" style="display:none" onclick="setViewMode('auto')">表示を自動に戻す</button>
   </div>
 </aside>
 <main>

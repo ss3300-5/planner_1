@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>(function(){try{var p=localStorage.getItem('plannerView'),m=location.search.indexOf('mobile')>-1;
+if(p==='pc'&&!m){location.replace('pc.html');return;}
+if(p==='mobile')return;
+if(!p&&!m&&window.matchMedia&&matchMedia('(min-width:1024px) and (pointer:fine)').matches)location.replace('pc.html');}catch(e){}})();</script>
 <title>Planner</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/mobile.css">
@@ -172,6 +176,9 @@
     <button class="hmenu-item" onclick="closeHMenu();openAuth()"><span class="hi-icon">☁️</span>アカウント／同期</button>
     <button class="hmenu-item" onclick="closeHMenu();exportData()"><span class="hi-icon">⬇️</span>データを書き出す</button>
     <button class="hmenu-item" onclick="closeHMenu();importData()"><span class="hi-icon">⬆️</span>データを読み込む</button>
+    <div class="hmenu-sep"></div>
+    <button class="hmenu-item" onclick="closeHMenu();setViewMode('pc')"><span class="hi-icon">🖥</span>PC表示に切り替え</button>
+    <button class="hmenu-item" id="viewAuto" style="display:none" onclick="closeHMenu();setViewMode('auto')"><span class="hi-icon">🔄</span>表示を自動に戻す</button>
   </div>
 </div>
 
