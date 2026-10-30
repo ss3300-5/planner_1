@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planner</title>
+<script>if(window.matchMedia&&!matchMedia('(min-width:900px)').matches)location.replace('index.html?mobile');</script>
+<link rel="stylesheet" href="css/pc.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs><symbol id="i-dash" viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></symbol><symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></symbol><symbol id="i-todo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></symbol><symbol id="i-ai" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol></defs></svg>
+<aside class="side">
+  <div class="brand"><img class="logo" src="img/logo.png" alt="Planner"><div><b>Planner</b><small>予定・タスク管理</small></div></div>
+  <nav class="nav">
+    <a data-p="dash" onclick="showPage('dash')"><svg class="i"><use href="#i-dash"/></svg>ダッシュボード</a>
+    <a data-p="cal" onclick="showPage('cal')"><svg class="i"><use href="#i-cal"/></svg>カレンダー<em class="red" id="bCal"></em></a>
+    <a data-p="todo" onclick="showPage('todo')"><svg class="i"><use href="#i-todo"/></svg>TODO ＆ メモ<em id="bTodo"></em></a>
+    <a data-p="claude" onclick="showPage('claude')"><svg class="i"><use href="#i-ai"/></svg>Claudeの進捗</a>
+  </nav>
+  <div class="sec">フォルダー</div>
+  <nav class="nav fl" id="folders"></nav>
+  <div class="side-b">
+    <button onclick="openAuth()">アカウント／同期</button>
+    <button onclick="exportData()">データを書き出す</button>
+    <button onclick="importData()">データを読み込む</button>
+  </div>
+</aside>
+<main>
+  <header>
+    <h1 id="title"></h1>
+    <div class="tabs" id="tabs"></div>
+    <div class="newwrap"><button class="btn btn-prim" onclick="toggleNew(event)">＋ 新規作成</button>
+      <div class="menu" id="newMenu"><a onclick="newItem('ev')">予定</a><a onclick="newItem('todo')">TODO</a><a onclick="newItem('memo')">メモ</a></div></div>
+  </header>
+  <section class="page" id="p-dash"></section>
+  <section class="page" id="p-cal"></section>
+  <section class="page" id="p-todo"><div class="grid2">
+    <div class="card"><div class="ch"><b>TODO</b></div><div class="todo-in"><input class="finput" id="todoInput" placeholder="新しいタスク"><button class="btn btn-prim" onclick="addTodo()">追加</button></div><div id="todoList"></div></div>
+    <div class="card"><div class="ch"><b>メモ</b></div><textarea class="finput" id="memoText" rows="12" placeholder="ちょっとしたメモ…"></textarea><div class="btn-row"><button class="btn btn-prim" onclick="saveMemo(this)">保存</button></div></div>
+  </div></section>
+  <section class="page" id="p-claude"></section>
+</main>
+
+<div class="overlay" id="dlg" onclick="ovClose(event,'dlg')"><div class="modal"><div class="modal-hdr"><div class="modal-title" id="dlgTitle"></div><button class="modal-x" onclick="closeModal('dlg')">×</button></div><div class="modal-body" id="dlgBody"></div></div></div>
+<!-- Account / Sync -->
+<div class="overlay" id="authModal" onclick="ovClose(event,'authModal')">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title">アカウント／同期</div><button class="modal-x" onclick="closeModal('authModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body">
+      <div id="authStatus" style="font-size:13px;color:var(--t2);margin-bottom:12px;white-space:pre-line"></div>
+      <div id="authForm">
+        <div class="fg"><label>メールアドレス</label><input class="finput" id="authEmail" type="email" autocomplete="email"></div>
+        <div class="fg"><label>パスワード（6文字以上）</label><input class="finput" id="authPass" type="password" autocomplete="current-password"></div>
+        <div class="btn-row"><button class="btn btn-ghost" onclick="authSignUp()">新規登録</button><button class="btn btn-prim" onclick="authSignIn()">ログイン</button></div>
+      </div>
+      <div class="btn-row" style="margin-top:0"><button class="btn btn-ghost" onclick="authDiagnose()">接続を診断</button></div>
+      <div id="authDiag" style="white-space:pre-line;font-size:12px;line-height:1.7;color:var(--t2);margin:10px 0"></div>
+      <div id="authOut" style="display:none"><div class="btn-row"><button class="btn btn-ghost" onclick="Store.sync()">今すぐ同期</button><button class="btn btn-del" onclick="authSignOut()">ログアウト</button></div></div>
+    </div>
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.js"></script>
+<script src="js/config.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/core.js"></script>
+<script src="js/account.js"></script>
+<script src="js/pc.js"></script>
+</body>
+</html>
