@@ -77,3 +77,11 @@ function importData(){
   };
   inp.click();
 }
+
+/* 表示の切り替え（PC版 / モバイル版）。選択はこの端末のブラウザに保存する */
+function setViewMode(v){
+  try{if(v==='auto')localStorage.removeItem('plannerView');else localStorage.setItem('plannerView',v);}catch(e){}
+  location.href=v==='pc'?'pc.html':v==='mobile'?'index.html?mobile':'index.html';
+}
+(function(){try{if(localStorage.getItem('plannerView')){const e=document.getElementById('viewAuto');if(e)e.style.display='';}}catch(x){}})();
+
