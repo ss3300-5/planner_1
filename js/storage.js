@@ -1,16 +1,18 @@
 /* データ保存層。保存先へのアクセスはここだけに集約する。
    - 常にこの端末(localStorage)へ保存し、ログイン中はSupabaseへも同期する
    - 衝突時は更新時刻が新しい方を採用（個人利用向けの簡易方式） */
+const CFG=(typeof CLOUD_CONFIG!=='undefined')?CLOUD_CONFIG:{url:'',anonKey:''};
 const Store={
   KEY:'plannerV4',sb:null,user:null,status:'この端末のみに保存',_t:null,
   load(){try{return JSON.parse(localStorage.getItem(this.KEY)||'null');}catch(e){return null;}},
   _local(d){try{localStorage.setItem(this.KEY,JSON.stringify(d));}catch(e){console.error(e);}},
   save(d){d._updatedAt=new Date().toISOString();this._local(d);this.push();},
-  enabled(){return !!(typeof supabase!=='undefined'&&CLOUD_CONFIG.url&&CLOUD_CONFIG.anonKey);},
+  url(){let u=(CFG.url||'').trim();if(!/^https?:\/\//.test(u))u='https://'+u;try{return new URL(u).origin;}catch(e){return u;}},
+  enabled(){return !!(typeof supabase!=='undefined'&&CFG.url&&CFG.anonKey);},
   setStatus(m){this.status=m;if(typeof authRender==='function')authRender();},
   async start(){
     if(!this.enabled())return;
-    this.sb=supabase.createClient(CLOUD_CONFIG.url,CLOUD_CONFIG.anonKey);
+    this.sb=supabase.createClient(this.url(),CFG.anonKey.trim());
     const {data}=await this.sb.auth.getSession();
     this.user=data.session?data.session.user:null;
     if(this.user)await this.sync();

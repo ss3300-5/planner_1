@@ -28,8 +28,8 @@ async function authDiagnose(){
   const L=[],ok=m=>L.push('✅ '+m),ng=m=>L.push('❌ '+m),el=document.getElementById('authDiag');
   el.textContent='診断中…';
   typeof supabase!=='undefined'?ok('Supabaseライブラリの読み込み'):ng('Supabaseライブラリが読み込めていません（通信の遮断・広告ブロック・古いキャッシュの可能性）');
-  CLOUD_CONFIG.url?ok('URL: '+CLOUD_CONFIG.url):ng('js/config.js の url が空です');
-  CLOUD_CONFIG.anonKey?ok('キー: '+CLOUD_CONFIG.anonKey.slice(0,12)+'…'):ng('js/config.js の anonKey が空です');
+  CFG.url?ok('URL: '+Store.url()+(Store.url()!==CFG.url.trim()?'（余分な部分を除いて使用）':'')):ng('js/config.js の url が空です');
+  CFG.anonKey?ok('キー: '+CFG.anonKey.slice(0,12)+'…'):ng('js/config.js の anonKey が空です');
   if(Store.sb){
     try{
       const {data,error}=await Store.sb.auth.getSession();
