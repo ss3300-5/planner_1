@@ -8,155 +8,69 @@ if(p==='pc'&&!m){location.replace('pc.html');return;}
 if(p==='mobile')return;
 if(!p&&!m&&window.matchMedia&&matchMedia('(min-width:1024px) and (pointer:fine)').matches)location.replace('pc.html');}catch(e){}})();</script>
 <title>Planner</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Cormorant+Garamond:ital,wght@1,600;1,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/mobile.css">
 </head>
 <body>
-<div class="app">
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="fo" viewBox="0 0 24 24"><path d="M3 6a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></symbol>
+<symbol id="be" viewBox="0 0 24 24"><path d="M18 9a6 6 0 10-12 0c0 6-2.5 8-2.5 8h17S18 15 18 9zM10 20a2 2 0 004 0"/></symbol>
+<symbol id="pl" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="ck" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+</defs></svg>
 
-  <!-- TOP BAR -->
-  <div class="topbar">
-    <div class="topbar-title" id="topbarTitle">ホーム</div>
-    <button class="tb-btn" id="hmenuBtn" onclick="openHMenu()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
-  </div>
+<div class="app" data-page="home">
+  <header class="top">
+    <img class="logo" src="img/logo.png" alt="Planner">
+    <h1 id="topbarTitle">ホーム</h1>
+    <span class="dr-btns"><button class="ib" onclick="openFolderModal()" aria-label="フォルダー"><svg class="i"><use href="#fo"/></svg></button><button class="ib" onclick="openNotifModal()" aria-label="通知"><svg class="i"><use href="#be"/></svg></button></span>
+    <button class="ib menu" id="hmenuBtn" onclick="openHMenu()" aria-label="メニュー"><i></i><i></i></button>
+  </header>
+  <p class="dateline" id="dateBar">—</p>
 
-  <!-- DATE BAR -->
-  <div class="daterow">
-    <div class="tb-date" id="dateBar">—</div>
-    <div class="dr-btns">
-      <button class="tb-btn sm" onclick="openFolderModal()">📁</button>
-      <button class="tb-btn sm" onclick="openNotifModal()">🔔</button>
-    </div>
-  </div>
-
-  <!-- PAGES -->
-
-  <!-- HOME -->
   <div class="page active" id="page-home">
-    <div class="pg-body">
-      <div class="sec-card big" onclick="openBoxDetail('today')">
-        <div class="sec-label"><div class="sec-pip p-now"></div>今日の予定</div>
-        <div id="big-today"></div>
-      </div>
-      <div class="sec-card big" onclick="openBoxDetail('claude')">
-        <div class="sec-label"><div class="sec-pip p-claude"></div>Claudeの進捗状況</div>
-        <div id="big-claude"></div>
-      </div>
-      <div class="sec-card big" onclick="openBoxDetail('todo')">
-        <div class="sec-label"><div class="sec-pip p-todo"></div>TODOリスト</div>
-        <div id="big-todo"></div>
-      </div>
+    <div class="hero" id="homeHero" onclick="openCurrDetail()"></div>
+    <div class="next" id="homeNext" onclick="openNextDetail()"></div>
+    <h3 class="sec">きょうの予定</h3>
+    <ol class="rail" id="big-today" onclick="openBoxDetail('today')"></ol>
+    <div class="duo">
+      <section onclick="openBoxDetail('todo')"><h3>TODO</h3><ul class="tdl" id="big-todo"></ul></section>
+      <section class="cl" onclick="openBoxDetail('claude')"><h3>Claude</h3><div id="big-claude"></div></section>
     </div>
   </div>
 
-  <!-- CALENDAR -->
   <div class="page" id="page-cal">
-    <div class="box4">
-      <div class="sec-card" onclick="openCurrDetail()"><div class="sec-label"><div class="sec-pip p-now"></div>今の予定</div><div id="home-now-body"></div></div>
-      <div class="sec-card" onclick="openNextDetail()"><div class="sec-label"><div class="sec-pip p-next"></div>次の予定</div><div id="home-next-body"></div></div>
-      <div class="sec-card" onclick="openBoxDetail('todo')"><div class="sec-label"><div class="sec-pip p-todo"></div>TODO</div><div id="home-todo-body"></div></div>
-      <div class="sec-card" onclick="openBoxDetail('claude')"><div class="sec-label"><div class="sec-pip p-claude"></div>Claude</div><div id="home-claude-body"></div></div>
-    </div>
-    <div class="cal-page">
-      <!-- 週ナビ -->
-      <div class="week-nav">
-        <div class="week-nav-top">
-          <button class="wn-month" id="calMonthBtn" onclick="switchCalView(calView==='year'?'day':'year')">— 月</button>
-          <div style="display:flex;gap:6px;align-items:center">
-            <div class="view-tabs" style="display:flex;gap:2px;background:rgba(255,255,255,.1);border-radius:8px;padding:3px">
-              <button class="vt-btn active" id="vt-day" onclick="switchCalView('day')">日</button>
-              <button class="vt-btn" id="vt-week" onclick="switchCalView('week')">週</button>
-              <button class="vt-btn" id="vt-year" onclick="switchCalView('year')">年</button>
-            </div>
-            <div class="wn-arrows">
-              <button class="wn-arr" onclick="navPrev()">‹</button>
-              <button class="wn-arr" onclick="navNext()">›</button>
-            </div>
-          </div>
-        </div>
-        <div class="week-days-row" id="weekDaysRow"></div>
-      </div>
-      <!-- グリッド -->
-      <div class="cal-scroll" id="calScroll">
-        <div class="time-grid" id="timeGrid"></div>
-        <div id="weekGridWrap" style="display:none;flex:1"></div>
-        <div class="year-body" id="yearBody" style="display:none"></div>
-      </div>
+    <div class="calt"><button class="mon" id="calMonthBtn" onclick="switchCalView(calView==='year'?'day':'year')">10月</button><span class="yr" id="calYear"></span><span class="arrows"><button onclick="navPrev()" aria-label="前へ">‹</button><button onclick="navNext()" aria-label="次へ">›</button></span></div>
+    <div hidden><button id="vt-day"></button><button id="vt-week"></button><button id="vt-year"></button></div>
+    <div class="week" id="weekDaysRow"></div>
+    <div class="cal-scroll" id="calScroll">
+      <div class="time-grid" id="timeGrid"></div>
+      <div id="weekGridWrap" style="display:none"></div>
+      <div class="year-body" id="yearBody" style="display:none"></div>
     </div>
   </div>
 
-  <!-- CLAUDE -->
   <div class="page" id="page-claude">
-    <div class="pg-body">
-      <!-- Claude進捗 -->
-      <div class="sec-card">
-        <div class="sec-label"><div class="sec-pip p-claude"></div>Claudeの進捗状況</div>
-        <div id="claude-cp-list"></div>
-        <button onclick="openModal('cpAddModal')" style="width:100%;margin-top:8px;padding:9px;background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.2);border-radius:10px;color:var(--t3);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">＋ プロジェクトを追加</button>
-      </div>
-      <!-- トークン・API -->
-      <div class="token-grid">
-        <div class="token-card">
-          <div class="token-label">トークン使用</div>
-          <div class="token-val" id="token-val">—</div>
-          <div class="token-sub">今月の合計</div>
-          <div class="token-track"><div class="token-fill" id="token-bar" style="width:0%"></div></div>
-        </div>
-        <div class="token-card">
-          <div class="token-label">API 使用量</div>
-          <div class="token-val" id="api-val">—</div>
-          <div class="token-sub">今月のリクエスト</div>
-          <div class="token-track"><div class="token-fill" id="api-bar" style="width:0%;background:linear-gradient(90deg,var(--green),var(--c7))"></div></div>
-        </div>
-      </div>
-      <!-- TODO サマリー -->
-      <div class="sec-card" onclick="showPage('todo')" style="cursor:pointer">
-        <div class="sec-label"><div class="sec-pip p-todo"></div>TODO</div>
-        <div id="claude-todo-body"><div class="sec-empty">タスクなし</div></div>
-      </div>
+    <div class="clh"><div><h2 id="clTitle"></h2><p>全体の進捗</p></div><div class="big" id="clBig"></div></div>
+    <div class="pj"><div id="claude-cp-list"></div><button class="addp" onclick="openModal('cpAddModal')">＋ プロジェクトを追加</button></div>
+    <div class="use">
+      <div class="token-card"><small>トークン使用状況</small><b id="token-val">—</b><div class="token-track"><div class="token-fill" id="token-bar"></div></div></div>
+      <div class="token-card"><small>API使用量</small><b id="api-val">—</b><div class="token-track"><div class="token-fill" id="api-bar"></div></div></div>
     </div>
+    <section class="todo"><h3 class="sec">TODO</h3><div id="claude-todo-body"></div></section>
   </div>
 
-  <!-- TODO & MEMO -->
   <div class="page" id="page-todo">
-    <div class="pg-body">
-      <!-- 今の予定 & 次の予定 -->
-      <div class="two-col">
-        <div class="sec-card half" onclick="openCurrDetail()" style="cursor:pointer">
-          <div class="sec-label"><div class="sec-pip p-now"></div>今の予定</div>
-          <div id="todo-now-body"><div class="sec-empty">予定なし</div></div>
-        </div>
-        <div class="sec-card half" onclick="openNextDetail()" style="cursor:pointer">
-          <div class="sec-label"><div class="sec-pip p-next"></div>次の予定</div>
-          <div id="todo-next-body"><div class="sec-empty">予定なし</div></div>
-        </div>
-      </div>
-      <!-- TODOリスト -->
-      <div class="sec-card">
-        <div class="sec-label"><div class="sec-pip p-todo"></div>TODO</div>
-        <div class="todo-input-row">
-          <input class="t-input" id="todoInput" placeholder="新しいタスク" type="text" onkeydown="if(event.key==='Enter')addTodo()">
-          <button class="t-add-btn" onclick="addTodo()">追加</button>
-        </div>
-        <div class="todo-list" id="todoList"></div>
-      </div>
-      <!-- メモ -->
-      <div class="sec-card">
-        <div class="sec-label"><div class="sec-pip p-memo"></div>メモ</div>
-        <textarea class="memo-ta" id="memoText" placeholder="ちょっとしたメモ…"></textarea>
-        <button class="memo-save-btn" onclick="saveMemo(event)">保存</button>
-      </div>
-    </div>
+    <p class="strip"><span id="todo-now-body"></span><em id="todo-next-body"></em></p>
+    <section class="todo"><h3 class="sec">TODO</h3>
+      <div class="todo-in"><input class="t-input" id="todoInput" placeholder="新しいタスク" type="text" onkeydown="if(event.key==='Enter')addTodo()"><button class="t-add-btn" onclick="addTodo()">追加</button></div>
+      <div class="todo-list" id="todoList"></div>
+    </section>
+    <section class="memo"><h3>メモ</h3><textarea class="memo-ta" id="memoText" placeholder="ちょっとしたメモ…"></textarea><button class="memo-save-btn" onclick="saveMemo(event)">保存</button></section>
   </div>
 
+  <button class="fab hidden" id="fabBtn" aria-label="予定を追加"><svg class="i"><use href="#pl"/></svg></button>
 </div>
-
-<!-- FAB -->
-<button class="fab" id="fabBtn">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-</button>
 
 <!-- HAMBURGER MENU -->
 <div class="hmenu-overlay" id="hmenuOverlay" onclick="closeHMenu()">
