@@ -29,7 +29,7 @@ function renderCalHeader(){
   // week days row
   const row=document.getElementById('weekDaysRow');
   if(calView==='year'){row.innerHTML='';return;}
-  const ws=calView==='day'?new Date(viewDate):wkStart(viewDate);
+  const ws=wkStart(viewDate);
   let html='';
   for(let i=0;i<7;i++){
     const d=new Date(ws);d.setDate(ws.getDate()+i);
@@ -86,7 +86,7 @@ function renderDay(){
     const ht=Math.max((en-s)/3600000,.25)*HOUR_H-2;
     const fcls=e.folder&&FOLDERS[e.folder]?FOLDERS[e.folder].fcls:'fc-none';
     const el=document.createElement('div');el.className=`ev-block ${fcls}`;
-    el.style.cssText=`position:absolute;top:${top}px;height:${ht}px;left:56px;right:4px;`;
+    el.style.cssText=`position:absolute;top:${top}px;height:${ht}px;left:60px;right:14px;`;
     el.innerHTML=`<div class="evb-title">${e.title}</div>${ht>28?`<div class="evb-time">${fmtT(s)} – ${fmtT(en)}</div>`:''}`;
     el.onclick=()=>showDetail(e);grid.appendChild(el);
   }
@@ -180,3 +180,6 @@ function renderYear(){
   document.getElementById('yearBody').innerHTML=html;
   setTimeout(()=>{const t=document.getElementById('yrFocus'),s=document.getElementById('calScroll');if(!t)return;const a=t.getBoundingClientRect(),b=s.getBoundingClientRect();s.scrollTop+=a.top-b.top-(b.height-a.height)/2;},60);
 }
+
+const _rch=renderCalHeader;
+renderCalHeader=function(){_rch();const y=document.getElementById('calYear');if(y)y.textContent=viewDate.getFullYear();};

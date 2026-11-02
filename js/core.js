@@ -37,15 +37,15 @@ let S = Store.load() || {
 })();
 
 const FOLDERS={
-  important:{label:'重要',fcls:'fc-important',color:'#ef233c'},
-  star:     {label:'スター',fcls:'fc-star',color:'#f4a261'},
-  work:     {label:'仕事',fcls:'fc-work',color:'#90e0ef'},
+  important:{label:'重要',fcls:'fc-important',color:'#e5384f'},
+  star:     {label:'スター',fcls:'fc-star',color:'#f59e0b'},
+  work:     {label:'仕事',fcls:'fc-work',color:'#0077b6'},
   personal: {label:'プライベート',fcls:'fc-personal',color:'#7b5ea7'},
-  health:   {label:'健康',fcls:'fc-health',color:'#2d9e6b'},
+  health:   {label:'健康',fcls:'fc-health',color:'#1fa855'},
 };
 const DJ=['日','月','火','水','木','金','土'];
 const DM=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-const HOUR_H=44;
+const HOUR_H=52;
 const pad=n=>String(n).padStart(2,'0');
 function pD(s){return new Date(s)}
 function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate()}

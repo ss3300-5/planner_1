@@ -32,7 +32,7 @@ document.addEventListener('visibilitychange',()=>{
 
 function updateDateBar(){
   const n=new Date();
-  document.getElementById('dateBar').textContent=`${n.getFullYear()}年${n.getMonth()+1}/${n.getDate()} ${n.getHours()}:${pad(n.getMinutes())}`;
+  document.getElementById('dateBar').innerHTML=`${n.getFullYear()}年${n.getMonth()+1}/${n.getDate()} <span>${n.getHours()}:${pad(n.getMinutes())}</span>`;
 }
 
 init();

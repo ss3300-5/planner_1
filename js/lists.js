@@ -80,8 +80,8 @@ function deleteCP(id){S.cps=S.cps.filter(p=>p.id!==id);save();renderCPList();if(
 // ===== TOKENS =====
 function renderTokens(){
   const t=S.tokens;
-  document.getElementById('token-val').textContent=t.used?t.used.toLocaleString():'—';
-  document.getElementById('api-val').textContent=t.apiUsed?t.apiUsed.toLocaleString():'—';
+  document.getElementById('token-val').innerHTML=`${(t.used||0).toLocaleString()}<span>/ ${(t.max||0).toLocaleString()}</span>`;
+  document.getElementById('api-val').innerHTML=`${(t.apiUsed||0).toLocaleString()}<span>/ ${(t.apiMax||0).toLocaleString()}</span>`;
   document.getElementById('token-bar').style.width=t.max?Math.min(100,t.used/t.max*100)+'%':'0%';
   document.getElementById('api-bar').style.width=t.apiMax?Math.min(100,t.apiUsed/t.apiMax*100)+'%':'0%';
   // tap to edit

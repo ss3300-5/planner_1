@@ -64,7 +64,7 @@ function openEditFromDetail(id){closeModal('detailModal');setTimeout(()=>editEve
 
 function showDetail(ev){
   const f=ev.folder&&FOLDERS[ev.folder]?FOLDERS[ev.folder]:null;
-  const col=ev.folder&&f?f.color:'rgba(255,255,255,.4)';
+  const col=ev.folder&&f?f.color:'#8a98ad';
   const rm={none:'なし',daily:'毎日',weekly:'毎週',yearly:'毎年'};
   const originId=ev._rep?ev.id.replace(/_r\d+$/,''):ev.id;
   let h=`<div class="det-hdr"><div class="det-dot" style="background:${col}"></div><div class="det-title">${ev.title}</div></div>`;
