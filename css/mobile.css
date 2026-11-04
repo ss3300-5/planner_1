@@ -160,3 +160,23 @@ button{font:inherit;color:inherit;cursor:pointer}
 .del-icon{display:grid;place-items:center;width:50px;height:50px;margin:0 auto 14px;background:#fdecee;border-radius:50%}
 .ev-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}.ev-dot{flex:none;width:8px;height:8px;margin-top:8px;border-radius:50%}
 .ev-title{font-size:14px;font-weight:700}.ev-time{font:italic 700 14px var(--num);color:var(--sub)}
+
+/* 時間軸：30分の補助線と、短い予定の1行表示 */
+.tc-line{position:relative}.tc-line::after{content:"";position:absolute;left:0;right:0;top:50%;border-top:1px dashed #e8eef4}
+.ev-block.sm{display:flex;align-items:baseline;gap:8px;padding-top:2px;padding-bottom:2px}
+.ev-block.sm .evb-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ev-block.sm .evb-time{flex:none}
+.wt{display:block;font:italic 700 10px/1.2 var(--num);color:var(--sub)}
+.ev-block{position:absolute}
+
+/* 繰り返しの範囲指定・TODOの期限 */
+.rd{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;font-weight:700;color:var(--ink)}.rd input{width:18px;height:18px;accent-color:var(--blue)}
+.fg .rd{margin-bottom:0;color:var(--ink);font-size:14px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 6px}.two small{display:block;font-size:11px;color:var(--sub)}
+.finput:disabled{opacity:.55}
+.t-due{width:124px;padding:8px 8px;font:inherit;font-size:12px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:12px 12px 4px 12px}
+.due{position:relative;flex:none;align-self:center;overflow:hidden;padding:2px 10px;font-size:11px;font-weight:700;color:var(--sub);background:#fff;border:1px solid var(--line);border-radius:10px 10px 4px 10px;cursor:pointer}
+.due input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.due.over{color:#fff;background:var(--red);border-color:var(--red)}.due.today{background:var(--foam);border-color:var(--sea);color:var(--ink)}.due.none{border-style:dashed;color:#8392a8}.due.done{opacity:.5}
+.rail .tdue::before{border-radius:2px;background:var(--ink)}.rail .tdue time{font:700 13px var(--ja)}
+.fg .rd{display:flex;margin-bottom:0;font-size:14px;color:var(--ink)}
+.todo-in .t-input{min-width:0}.t-due{flex:none;width:112px}.t-add-btn{flex:none;white-space:nowrap}
