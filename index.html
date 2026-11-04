@@ -63,7 +63,7 @@ if(!p&&!m&&window.matchMedia&&matchMedia('(min-width:1024px) and (pointer:fine)'
   <div class="page" id="page-todo">
     <p class="strip"><span id="todo-now-body"></span><em id="todo-next-body"></em></p>
     <section class="todo"><h3 class="sec">TODO</h3>
-      <div class="todo-in"><input class="t-input" id="todoInput" placeholder="新しいタスク" type="text" onkeydown="if(event.key==='Enter')addTodo()"><button class="t-add-btn" onclick="addTodo()">追加</button></div>
+      <div class="todo-in"><input class="t-input" id="todoInput" placeholder="新しいタスク" type="text" onkeydown="if(event.key==='Enter')addTodo()"><input class="t-due" id="todoDue" type="date" title="期限" aria-label="期限"><button class="t-add-btn" onclick="addTodo()">追加</button></div>
       <div class="todo-list" id="todoList"></div>
     </section>
     <section class="memo"><h3>メモ</h3><textarea class="memo-ta" id="memoText" placeholder="ちょっとしたメモ…"></textarea><button class="memo-save-btn" onclick="saveMemo(event)">保存</button></section>
@@ -106,6 +106,12 @@ if(!p&&!m&&window.matchMedia&&matchMedia('(min-width:1024px) and (pointer:fine)'
       <button class="modal-x" onclick="closeModal('addEventModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
+      <div class="fg" id="scopeBox" style="display:none"><label>変更の範囲</label>
+        <label class="rd"><input type="radio" name="evScope" value="one" checked onchange="scopeChange()"><span>この回だけ</span></label>
+        <label class="rd"><input type="radio" name="evScope" value="range" onchange="scopeChange()"><span>期間を指定</span></label>
+        <div class="two" id="scRange" style="display:none"><div><small>開始日</small><input class="finput" type="date" id="scFrom"></div><div><small>終了日</small><input class="finput" type="date" id="scTo"></div></div>
+        <label class="rd"><input type="radio" name="evScope" value="all" onchange="scopeChange()"><span>すべての回</span></label>
+      </div>
       <div class="fg"><label>タイトル</label><input class="finput" id="evTitle" placeholder="予定のタイトル" type="text"></div>
       <div class="fg"><label>開始</label><input class="finput" id="evStart" type="datetime-local"></div>
       <div class="fg"><label>終了</label><input class="finput" id="evEnd" type="datetime-local"></div>
@@ -120,13 +126,14 @@ if(!p&&!m&&window.matchMedia&&matchMedia('(min-width:1024px) and (pointer:fine)'
         </div>
       </div>
       <div class="fg"><label>繰り返し</label>
-        <select class="finput" id="evRepeat">
+        <select class="finput" id="evRepeat" onchange="repChange()">
           <option value="none">なし</option>
           <option value="daily">毎日</option>
           <option value="weekly">毎週</option>
           <option value="yearly">毎年</option>
         </select>
       </div>
+      <div class="fg" id="untilRow" style="display:none"><label>繰り返しの終了日（空欄なら続ける）</label><input class="finput" id="evUntil" type="date"></div>
       <div class="fg"><div class="tog-row"><span class="tog-label">通知</span><label class="tog"><input type="checkbox" id="evNotif" checked><span class="tog-sl"></span></label></div></div>
       <div class="btn-row">
         <button class="btn btn-ghost" onclick="closeModal('addEventModal')">キャンセル</button>
@@ -157,6 +164,12 @@ if(!p&&!m&&window.matchMedia&&matchMedia('(min-width:1024px) and (pointer:fine)'
       <div class="del-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></div>
       <div style="font-size:16px;font-weight:700;color:var(--t1);margin-bottom:6px">予定を削除しますか？</div>
       <div style="font-size:13px;color:var(--t2);margin-bottom:22px" id="delTitle"></div>
+      <div id="dScope" style="display:none;text-align:left;margin:-10px 0 18px">
+        <label class="rd"><input type="radio" name="delScope" value="one" checked onchange="delScopeChange()"><span>この回だけ</span></label>
+        <label class="rd"><input type="radio" name="delScope" value="range" onchange="delScopeChange()"><span>期間を指定</span></label>
+        <div class="two" id="dRange" style="display:none"><div><small>開始日</small><input class="finput" type="date" id="dFrom"></div><div><small>終了日</small><input class="finput" type="date" id="dTo"></div></div>
+        <label class="rd"><input type="radio" name="delScope" value="all" onchange="delScopeChange()"><span>すべての回</span></label>
+      </div>
       <div style="display:flex;gap:10px">
         <button class="btn btn-ghost" style="flex:1" onclick="closeModal('delModal')">キャンセル</button>
         <button class="btn btn-del" style="flex:1" onclick="doDelete()">削除する</button>
@@ -237,6 +250,7 @@ if(!p&&!m&&window.matchMedia&&matchMedia('(min-width:1024px) and (pointer:fine)'
 <script src="js/config.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/core.js"></script>
+<script src="js/series.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/account.js"></script>
 <script src="js/calendar.js"></script>

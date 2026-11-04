@@ -39,7 +39,7 @@ if(p==='mobile'||(window.matchMedia&&!matchMedia('(min-width:900px)').matches))l
   <section class="page" id="p-dash"></section>
   <section class="page" id="p-cal"></section>
   <section class="page" id="p-todo"><div class="grid2">
-    <div class="card"><div class="ch"><b>TODO</b></div><div class="todo-in"><input class="finput" id="todoInput" placeholder="新しいタスク"><button class="btn btn-prim" onclick="addTodo()">追加</button></div><div id="todoList"></div></div>
+    <div class="card"><div class="ch"><b>TODO</b></div><div class="todo-in"><input class="finput" id="todoInput" placeholder="新しいタスク"><input class="finput" id="todoDue" type="date" title="期限" style="width:150px"><button class="btn btn-prim" onclick="addTodo()">追加</button></div><div id="todoList"></div></div>
     <div class="card"><div class="ch"><b>メモ</b></div><textarea class="finput" id="memoText" rows="12" placeholder="ちょっとしたメモ…"></textarea><div class="btn-row"><button class="btn btn-prim" onclick="saveMemo(this)">保存</button></div></div>
   </div></section>
   <section class="page" id="p-claude"></section>
@@ -69,6 +69,7 @@ if(p==='mobile'||(window.matchMedia&&!matchMedia('(min-width:900px)').matches))l
 <script src="js/config.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/core.js"></script>
+<script src="js/series.js"></script>
 <script src="js/account.js"></script>
 <script src="js/pc.js"></script>
 </body>
