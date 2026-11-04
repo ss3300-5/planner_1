@@ -34,7 +34,9 @@ function renderHome(){
   window._today=day;
   $h('big-today').innerHTML=day.slice(0,5).map(e=>{const s=pD(e.start),en=pD(e.end),c=e.folder&&FOLDERS[e.folder]?FOLDERS[e.folder].color:'';
     return `<li class="${en<n?'done':(s<=n&&en>=n?'now':'')}" ${c?`style="--c:${c}"`:''}><time>${s.getHours()}:${pad(s.getMinutes())}</time><span>${esc(e.title)}</span></li>`;}).join('')||'<li><span class="sec-empty">きょうの予定はありません</span></li>';
-  const todos=[...S.todos.filter(x=>!x.done),...S.todos.filter(x=>x.done)].slice(0,4);
+  const dues=dueTodayTodos().map(t=>`<li class="tdue"><time>期限</time><span>${esc(t.text)}</span></li>`).join('');
+  if(dues){if(!day.length)$h('big-today').innerHTML='';$h('big-today').insertAdjacentHTML('beforeend',dues);}
+  const todos=sortTodos(S.todos).slice(0,4);
   $h('big-todo').innerHTML=todos.map(x=>`<li class="${x.done?'done':''}"><i class="cb${x.done?' on':''}">${x.done?'<svg class="i"><use href="#ck"/></svg>':''}</i><span>${esc(x.text)}</span></li>`).join('')||'<li><span class="sec-empty">タスクなし</span></li>';
   const cn=S.cps.length,avg=cn?Math.round(S.cps.reduce((a,p)=>a+p.pct,0)/cn):0;
   $h('big-claude').innerHTML=cn?`<div class="rgw"><span class="rg">${ringSVG(avg)}</span><span class="pct">${avg}<small>%</small></span></div><p>${S.cps.slice(0,2).map(p=>esc(p.name)+' '+p.pct+'%').join('<br>')}</p>`:'<p>進捗はまだありません</p>';

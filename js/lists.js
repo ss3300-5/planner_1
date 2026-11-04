@@ -19,25 +19,25 @@ function renderTodoPage(){
 }
 function renderTodoList(){
   const el=document.getElementById('todoList');
-  if(!S.todos.length){el.innerHTML='<div class="empty">TODOはありません</div>';return;}
-  el.innerHTML=S.todos.map(t=>`<div class="todo-item">
+  el.innerHTML=S.todos.length?sortTodos(S.todos).map(t=>{const d=dueInfo(t);return `<div class="todo-item">
     <div class="todo-chk${t.done?' chk':''}" onclick="toggleTodo('${t.id}')">${t.done?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg>`:''}</div>
-    <div class="todo-tw"><div class="todo-txt${t.done?' done':''}">${t.text}</div>${t.note?`<div class="todo-note">${t.note}</div>`:''}</div>
+    <div class="todo-tw"><div class="todo-txt${t.done?' done':''}">${esc(t.text)}</div>${t.note?`<div class="todo-note">${esc(t.note)}</div>`:''}</div>
+    <label class="due ${d.cls}">${d.label}<input type="date" value="${t.due||''}" onchange="setDue('${t.id}',this.value)"></label>
     <button class="todo-del-btn" onclick="deleteTodo('${t.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-  </div>`).join('');
-  // claude pageのTODOも更新
+  </div>`;}).join(''):'<div class="empty">TODOはありません</div>';
   const cl=document.getElementById('claude-todo-body');
   if(cl){
-    const active=S.todos.filter(t=>!t.done).slice(0,3);
-    cl.innerHTML=active.length?active.map(t=>`<div class="todo-mini-row"><div class="todo-mini-chk"></div><div class="todo-mini-txt">${t.text}</div></div>`).join(''):'<div class="sec-empty">タスクなし</div>';
+    const active=sortTodos(S.todos).filter(t=>!t.done).slice(0,3);
+    cl.innerHTML=active.length?active.map(t=>`<div class="todo-mini-row"><div class="todo-mini-chk"></div><div class="todo-mini-txt">${esc(t.text)}</div></div>`).join(''):'<div class="sec-empty">タスクなし</div>';
   }
 }
 function addTodo(){
   const txt=document.getElementById('todoInput').value.trim();if(!txt)return;
-  S.todos.push({id:gid(),text:txt,note:'',done:false});
-  document.getElementById('todoInput').value='';
+  S.todos.push({id:gid(),text:txt,note:'',done:false,due:document.getElementById('todoDue').value||''});
+  document.getElementById('todoInput').value='';document.getElementById('todoDue').value='';
   save();renderTodoList();
 }
+function setDue(id,v){const t=S.todos.find(x=>x.id===id);if(t){t.due=v||'';save();renderTodoList();if(curPage==='home')renderHome();}}
 function toggleTodo(id){const t=S.todos.find(t=>t.id===id);if(t){t.done=!t.done;save();renderTodoList();}}
 function deleteTodo(id){S.todos=S.todos.filter(t=>t.id!==id);save();renderTodoList();}
 

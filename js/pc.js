@@ -44,7 +44,8 @@ function nowNext(){
   return[cur,nx];
 }
 const evRow=e=>`<div class="row" onclick="evDetail('${reg(e)}')"><i style="background:${colOf(e)}"></i><div><b>${esc(e.title)}</b><small>${fmtT(pD(e.start))} – ${fmtT(pD(e.end))}${e.folder?' ・'+FOLDERS[e.folder].label:''}</small></div></div>`;
-const todoRow=t=>`<div class="row todo"><span class="chk ${t.done?'on':''}" onclick="togTodo('${t.id}')"></span><div class="${t.done?'done':''}"><b>${esc(t.text)}</b></div><button class="x" onclick="delTodo('${t.id}')">×</button></div>`;
+const todoRow=t=>{const d=dueInfo(t);return `<div class="row todo"><span class="chk ${t.done?'on':''}" onclick="togTodo('${t.id}')"></span><div class="${t.done?'done':''}"><b>${esc(t.text)}</b></div><label class="due ${d.cls}">${d.label}<input type="date" value="${t.due||''}" onchange="setDue('${t.id}',this.value)"></label><button class="x" onclick="delTodo('${t.id}')">×</button></div>`;};
+const dueRow=t=>`<div class="row todo"><i style="background:var(--ink);border-radius:2px"></i><div><b>${esc(t.text)}</b><small>期限のTODO</small></div></div>`;
 const cpRows=edit=>S.cps.map(p=>`<div class="cp"><div class="cp-t"><b>${esc(p.name)}</b><span>${p.pct}%</span>${edit?`<button class="x" onclick="cpDel('${p.id}')">×</button>`:''}</div><div class="bar"><u style="width:${p.pct}%"></u></div>${p.note?`<small class="mute">${esc(p.note)}</small>`:''}</div>`).join('')||'<p class="mute">進捗はありません</p>';
 function renderDash(){
   const [cur,nx]=nowNext();
@@ -54,8 +55,8 @@ function renderDash(){
     <div class="card" onclick="showPage('todo')"><span class="lbl">TODO</span><h3>${open.length}<small> 件 未完了</small></h3><p>${esc(open[0]?open[0].text:'タスクなし')}</p></div>
     <div class="card" onclick="showPage('claude')"><span class="lbl">Claude</span><h3>${avg}<small> % 平均進捗</small></h3><div class="bar"><u style="width:${avg}%"></u></div></div></div>
     <div class="grid2">
-    <div class="card"><div class="ch"><b>今日の予定</b><a onclick="showPage('cal')">カレンダーへ</a></div>${dayEvs(new Date()).map(evRow).join('')||'<p class="mute">予定はありません</p>'}</div>
-    <div class="card"><div class="ch"><b>TODO</b><a onclick="showPage('todo')">すべて見る</a></div>${open.slice(0,6).map(todoRow).join('')||'<p class="mute">タスクなし</p>'}</div>
+    <div class="card"><div class="ch"><b>今日の予定</b><a onclick="showPage('cal')">カレンダーへ</a></div>${(dayEvs(new Date()).map(evRow).join('')+dueTodayTodos().map(dueRow).join(''))||'<p class="mute">予定はありません</p>'}</div>
+    <div class="card"><div class="ch"><b>TODO</b><a onclick="showPage('todo')">すべて見る</a></div>${sortTodos(open).slice(0,6).map(todoRow).join('')||'<p class="mute">タスクなし</p>'}</div>
     <div class="card"><div class="ch"><b>Claudeの進捗状況</b><a onclick="showPage('claude')">詳細</a></div>${cpRows(false)}</div>
     <div class="card"><div class="ch"><b>メモ</b><a onclick="showPage('todo')">編集</a></div><p class="memo">${esc(S.memo||'')}</p></div></div>`;
 }
@@ -74,7 +75,8 @@ function weekHTML(){
   for(let i=0;i<7;i++){
     const d=new Date(ws);d.setDate(ws.getDate()+i);
     h+=`<div class="wk-c" style="height:${24*H}px">`+[...Array(24)].map((_,x)=>`<div class="hr" style="height:${H}px" onclick="evDlg(new Date(${d.getTime()}),${x})"></div>`).join('');
-    l.filter(e=>sameDay(pD(e.start),d)).forEach(e=>{const s=pD(e.start),en=pD(e.end);h+=`<div class="wk-e" style="top:${Math.round((s.getHours()*60+s.getMinutes())/60*H)}px;height:${Math.round(Math.max((en-s)/3600000,.4)*H-2)}px;--c:${colOf(e)}" onclick="evDetail('${reg(e)}')"><b>${esc(e.title)}</b><small>${fmtT(s)}</small></div>`;});
+    const its=l.filter(e=>sameDay(pD(e.start),d)).map(e=>({ev:e,s:pD(e.start),e:pD(e.end)}));layoutCols(its);
+    its.forEach(it=>{const e=it.ev,s=it.s,en=it.e;h+=`<div class="wk-e" style="top:${Math.round((s.getHours()*60+s.getMinutes())/60*H)}px;height:${Math.round(Math.max((en-s)/3600000,.4)*H-2)}px;left:calc(${it._c} * 100% / ${it._n} + 2px);width:calc(100% / ${it._n} - 4px);right:auto;--c:${colOf(e)}" onclick="evDetail('${reg(e)}')"><b>${esc(e.title)}</b><small>${fmtT(s)}</small></div>`;});
     if(sameDay(d,today))h+=`<div class="nowl" style="top:${Math.round((today.getHours()*60+today.getMinutes())/60*H)}px"></div>`;
     h+='</div>';
   }
@@ -91,38 +93,73 @@ function monthHTML(){
   return h+'</div>';
 }
 
-/* 予定の作成・詳細・削除 */
-function evDlg(d,h){
-  const s=new Date(d||new Date());
-  if(h!==undefined)s.setHours(h,0,0,0);else if(!d){s.setMinutes(0,0,0);s.setHours(s.getHours()+1);}
-  const e=new Date(s);e.setHours(e.getHours()+1);
-  dlg('予定を作成',`<div class="fg"><label>タイトル</label><input class="finput" id="fTitle"></div>
+/* 予定の作成・編集・詳細・削除（繰り返しは「この回だけ／期間／すべて」を選べる）*/
+const scopeHTML=(n,label,occ,until)=>`<div class="fg"><label>${label}</label><label class="rd"><input type="radio" name="${n}" value="one" checked onchange="scChg('${n}')"> この回だけ</label><label class="rd"><input type="radio" name="${n}" value="range" onchange="scChg('${n}')"> 期間を指定</label><div class="two" id="${n}R" style="display:none"><div class="fg"><label>開始日</label><input class="finput" type="date" id="${n}From" value="${occ}"></div><div class="fg"><label>終了日</label><input class="finput" type="date" id="${n}To" value="${until||occ}"></div></div><label class="rd"><input type="radio" name="${n}" value="all" onchange="scChg('${n}')"> すべての回</label></div>`;
+const scVal=n=>document.querySelector(`input[name=${n}]:checked`).value;
+function scChg(n){const v=scVal(n);$(n+'R').style.display=v==='range'?'grid':'none';if(n==='fsc'){const l=v!=='all';$('fRep').disabled=l;$('fUntil').disabled=l;}}
+function repChg(){$('fUntilRow').style.display=$('fRep').value!=='none'?'block':'none';}
+let edId=null,edOcc=null;
+function evDlg(d,h,id,occ){
+  const ed=id?S.events.find(x=>x.id===id):null;let s,e;
+  if(ed){const du=pD(ed.end)-pD(ed.start);s=occ?pD(occ):pD(ed.start);e=new Date(s.getTime()+du);}
+  else{s=new Date(d||new Date());if(h!==undefined)s.setHours(h,0,0,0);else if(!d){s.setMinutes(0,0,0);s.setHours(s.getHours()+1);}e=new Date(s);e.setHours(e.getHours()+1);}
+  edId=ed?ed.id:null;edOcc=ed?dayStr(s):null;
+  dlg(ed?'予定を編集':'予定を作成',`${ed&&recurring(ed)?scopeHTML('fsc','変更の範囲',edOcc,ed.until):''}<div class="fg"><label>タイトル</label><input class="finput" id="fTitle" value="${ed?esc(ed.title):''}"></div>
   <div class="two"><div class="fg"><label>開始</label><input class="finput" id="fStart" type="datetime-local" value="${localISO(s)}"></div><div class="fg"><label>終了</label><input class="finput" id="fEnd" type="datetime-local" value="${localISO(e)}"></div></div>
-  <div class="two"><div class="fg"><label>フォルダー</label><select class="finput" id="fFolder"><option value="">なし</option>${Object.entries(FOLDERS).map(([k,f])=>`<option value="${k}">${f.label}</option>`).join('')}</select></div>
-  <div class="fg"><label>繰り返し</label><select class="finput" id="fRep">${Object.entries(REP).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div></div>
-  <div class="fg"><label>説明</label><textarea class="finput" id="fDesc" rows="2"></textarea></div>
-  <label class="chkrow"><input type="checkbox" id="fNotif" checked> 通知する</label>
+  <div class="two"><div class="fg"><label>フォルダー</label><select class="finput" id="fFolder"><option value="">なし</option>${Object.entries(FOLDERS).map(([k,f])=>`<option value="${k}"${ed&&ed.folder===k?' selected':''}>${f.label}</option>`).join('')}</select></div>
+  <div class="fg"><label>繰り返し</label><select class="finput" id="fRep" onchange="repChg()">${Object.entries(REP).map(([k,v])=>`<option value="${k}"${ed&&ed.repeat===k?' selected':''}>${v}</option>`).join('')}</select></div></div>
+  <div class="fg" id="fUntilRow" style="display:none"><label>繰り返しの終了日（空欄なら続ける）</label><input class="finput" id="fUntil" type="date" value="${ed&&ed.until||''}"></div>
+  <div class="fg"><label>説明</label><textarea class="finput" id="fDesc" rows="2">${ed?esc(ed.desc||''):''}</textarea></div>
+  <label class="chkrow"><input type="checkbox" id="fNotif" ${!ed||ed.notif?'checked':''}> 通知する</label>
   <div class="btn-row"><button class="btn btn-ghost" onclick="closeModal('dlg')">キャンセル</button><button class="btn btn-prim" onclick="saveEv()">保存</button></div>`);
-  $('fTitle').focus();
+  if(ed&&recurring(ed))scChg('fsc');repChg();$('fTitle').focus();
 }
 function saveEv(){
   const title=$('fTitle').value.trim();if(!title){$('fTitle').focus();return;}
-  S.events.push({id:gid(),title,start:$('fStart').value,end:$('fEnd').value,folder:$('fFolder').value,repeat:$('fRep').value,notif:$('fNotif').checked,desc:$('fDesc').value});
+  const start=$('fStart').value,end=$('fEnd').value;
+  if(!start||!end||end<=start){alert('終了は開始より後にしてください');return;}
+  const f={title,start,end,folder:$('fFolder').value,notif:$('fNotif').checked,desc:$('fDesc').value};
+  const rep=$('fRep').value,until=rep==='none'?'':$('fUntil').value;
+  if(until&&until<start.slice(0,10)){alert('繰り返しの終了日は開始日より後にしてください');return;}
+  if(!edId)S.events.push({id:gid(),...f,repeat:rep,until});
+  else{
+    const e=S.events.find(x=>x.id===edId);
+    if(recurring(e)){
+      const sc=scVal('fsc');
+      if(sc==='all'){
+        const delta=Math.round((new Date(start.slice(0,10))-new Date(edOcc))/86400000);
+        const bs=pD(e.start);bs.setDate(bs.getDate()+delta);const ns=pD(start);bs.setHours(ns.getHours(),ns.getMinutes(),0,0);
+        applyScope(edId,'all',null,null,{...f,start:localISO(bs),end:localISO(new Date(bs.getTime()+(pD(end)-pD(start)))),repeat:rep,until});
+      }else{
+        const fr=sc==='one'?edOcc:$('fscFrom').value,to=sc==='one'?edOcc:$('fscTo').value;
+        if(!fr||!to||fr>to){alert('期間の開始日と終了日を正しく入れてください');return;}
+        applyScope(edId,sc,fr,to,f);
+      }
+    }else applyScope(edId,'all',null,null,{...f,repeat:rep,until});
+  }
   save();closeModal('dlg');showPage();
 }
 function evDetail(k){
   const e=EV[k];if(!e)return;const oid=e.id.replace(/_r\d+$/,'');
-  dlg(e.title,`<div class="det"><p>日時：${fmtD(pD(e.start))} ${fmtT(pD(e.start))} – ${fmtT(pD(e.end))}</p><p>フォルダー：${e.folder?FOLDERS[e.folder].label:'なし'}</p><p>繰り返し：${REP[e.repeat]||'なし'}</p><p>通知：${e.notif?'あり':'なし'}</p>${e.desc?`<p>${esc(e.desc)}</p>`:''}</div>
-  <div class="btn-row"><button class="btn btn-ghost" onclick="closeModal('dlg')">閉じる</button><button class="btn btn-del" onclick="delEv('${oid}')">削除</button></div>`);
+  dlg(e.title,`<div class="det"><p>日時：${fmtD(pD(e.start))} ${fmtT(pD(e.start))} – ${fmtT(pD(e.end))}</p><p>フォルダー：${e.folder?FOLDERS[e.folder].label:'なし'}</p><p>繰り返し：${REP[e.repeat]||'なし'}${e.until?'（'+e.until.replace(/-/g,'/')+'まで）':''}</p><p>通知：${e.notif?'あり':'なし'}</p>${e.desc?`<p>${esc(e.desc)}</p>`:''}</div>
+  <div class="btn-row"><button class="btn btn-ghost" onclick="closeModal('dlg')">閉じる</button><button class="btn btn-ghost" onclick="evDlg(null,undefined,'${oid}','${e.start}')">編集</button><button class="btn btn-del" onclick="delDlg('${oid}','${e.start}')">削除</button></div>`);
 }
-function delEv(id){
-  if(!confirm('この予定を削除しますか？（繰り返し予定は全回が対象です）'))return;
-  S.events=S.events.filter(x=>x.id!==id);save();closeModal('dlg');showPage();
+function delDlg(id,occ){
+  const e=S.events.find(x=>x.id===id);if(!e)return;
+  if(!recurring(e)){if(!confirm('この予定を削除しますか？'))return;applyScope(id,'all',null,null,null);save();closeModal('dlg');showPage();return;}
+  const o=dayStr(pD(occ));
+  dlg('予定を削除',`<p class="mute" style="margin-bottom:10px">「${esc(e.title)}」は繰り返し予定です。</p>${scopeHTML('dsc','削除の範囲',o,e.until)}<div class="btn-row"><button class="btn btn-ghost" onclick="closeModal('dlg')">キャンセル</button><button class="btn btn-del" onclick="delGo('${id}','${o}')">削除する</button></div>`);
+}
+function delGo(id,o){
+  const sc=scVal('dsc'),fr=sc==='one'?o:$('dscFrom').value,to=sc==='one'?o:$('dscTo').value;
+  if(sc==='range'&&(!fr||!to||fr>to)){alert('期間の開始日と終了日を正しく入れてください');return;}
+  applyScope(id,sc,fr,to,null);save();closeModal('dlg');showPage();
 }
 
-/* TODO・メモ */
-function renderTodo(){$('todoList').innerHTML=S.todos.map(todoRow).join('')||'<p class="mute">TODOはありません</p>';if(document.activeElement!==$('memoText'))$('memoText').value=S.memo||'';}
-function addTodo(){const v=$('todoInput').value.trim();if(!v)return;S.todos.push({id:gid(),text:v,note:'',done:false});$('todoInput').value='';save();showPage();}
+/* TODO・メモ（期限つき）*/
+function renderTodo(){$('todoList').innerHTML=sortTodos(S.todos).map(todoRow).join('')||'<p class="mute">TODOはありません</p>';if(document.activeElement!==$('memoText'))$('memoText').value=S.memo||'';}
+function addTodo(){const v=$('todoInput').value.trim();if(!v)return;S.todos.push({id:gid(),text:v,note:'',done:false,due:$('todoDue').value||''});$('todoInput').value='';$('todoDue').value='';save();showPage();}
+function setDue(id,v){const t=S.todos.find(x=>x.id===id);if(t){t.due=v||'';save();showPage();}}
 function togTodo(id){const t=S.todos.find(x=>x.id===id);if(t){t.done=!t.done;save();showPage();}}
 function delTodo(id){S.todos=S.todos.filter(x=>x.id!==id);save();showPage();}
 function saveMemo(b){S.memo=$('memoText').value;save();b.textContent='保存しました';setTimeout(()=>b.textContent='保存',1200);}

@@ -45,7 +45,7 @@ const FOLDERS={
 };
 const DJ=['日','月','火','水','木','金','土'];
 const DM=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-const HOUR_H=52;
+const HOUR_H=72;
 const pad=n=>String(n).padStart(2,'0');
 function pD(s){return new Date(s)}
 function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate()}
@@ -66,12 +66,12 @@ function expand(from,to){
     const s=pD(e.start),en=pD(e.end),dur=en-s;
     if(s>=from&&s<=hor)res.push({...e});
     if(e.repeat==='none')continue;
-    let cur=new Date(s);
+    let cur=new Date(s);const lim=e.until?new Date(e.until+'T23:59:59'):null;
     for(let i=0;i<3000;i++){
       if(e.repeat==='daily')cur.setDate(cur.getDate()+1);
       else if(e.repeat==='weekly')cur.setDate(cur.getDate()+7);
       else if(e.repeat==='yearly')cur.setFullYear(cur.getFullYear()+1);
-      if(cur>hor)break;
+      if(cur>hor)break;if(lim&&cur>lim)break;
       if(cur>=from){const ns=new Date(cur),ne=new Date(ns.getTime()+dur);res.push({...e,id:e.id+'_r'+i,start:localISO(ns),end:localISO(ne),_rep:true});}
     }
   }

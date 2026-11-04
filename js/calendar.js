@@ -80,14 +80,15 @@ function renderDay(){
     if(h<23)document.getElementById('tcl-'+h).ondblclick=()=>openAddEvent(tgt,h);
   }
   const endRow=document.createElement('div');endRow.className='time-row';endRow.style.height='0';endRow.innerHTML='<div class="tl-col"><span class="tl-text">24:00</span></div><div class="tc-line"></div>';grid.appendChild(endRow);
-  for(const e of evs){
-    const s=pD(e.start),en=pD(e.end);
+  const items=evs.map(e=>({ev:e,s:pD(e.start),e:pD(e.end)}));layoutCols(items);
+  for(const it of items){
+    const e=it.ev,s=it.s,en=it.e;
     const top=(s.getHours()*60+s.getMinutes())/60*HOUR_H;
     const ht=Math.max((en-s)/3600000,.25)*HOUR_H-2;
     const fcls=e.folder&&FOLDERS[e.folder]?FOLDERS[e.folder].fcls:'fc-none';
     const el=document.createElement('div');el.className=`ev-block ${fcls}`;
-    el.style.cssText=`position:absolute;top:${top}px;height:${ht}px;left:60px;right:14px;`;
-    el.innerHTML=`<div class="evb-title">${e.title}</div>${ht>28?`<div class="evb-time">${fmtT(s)} – ${fmtT(en)}</div>`:''}`;
+    el.style.cssText=`position:absolute;top:${top}px;height:${ht}px;left:calc(60px + (100% - 74px) * ${it._c} / ${it._n});width:calc((100% - 74px) / ${it._n} - 3px);`;
+    el.innerHTML=`<div class="evb-title">${esc(e.title)}</div><div class="evb-time">${fmtT(s)} – ${fmtT(en)}</div>`;if(ht<46)el.classList.add('sm');
     el.onclick=()=>showDetail(e);grid.appendChild(el);
   }
   // now line
@@ -119,14 +120,15 @@ function renderWeek(){
     const d=new Date(ws);d.setDate(ws.getDate()+i);
     const col=document.createElement('div');col.className='wg-day-col';
     for(let h=0;h<24;h++){const ln=document.createElement('div');ln.className='wg-hour-line';ln.style.height=HOUR_H+'px';ln.ondblclick=()=>openAddEvent(d,h);col.appendChild(ln);}
-    evs.filter(e=>sameDay(pD(e.start),d)).forEach(e=>{
-      const s=pD(e.start),en=pD(e.end);
+    const items=evs.filter(e=>sameDay(pD(e.start),d)).map(e=>({ev:e,s:pD(e.start),e:pD(e.end)}));layoutCols(items);
+    items.forEach(it=>{
+      const e=it.ev,s=it.s,en=it.e;
       const top=(s.getHours()*60+s.getMinutes())/60*HOUR_H;
       const ht=Math.max((en-s)/3600000,.25)*HOUR_H-2;
       const fcls=e.folder&&FOLDERS[e.folder]?FOLDERS[e.folder].fcls:'fc-none';
       const ev=document.createElement('div');ev.className=`ev-block ${fcls}`;
-      ev.style.cssText=`top:${top}px;height:${ht}px;left:1px;right:1px;`;
-      ev.textContent=e.title;ev.onclick=()=>showDetail(e);col.appendChild(ev);
+      ev.style.cssText=`top:${top}px;height:${ht}px;left:calc(${it._c} * 100% / ${it._n} + 1px);width:calc(100% / ${it._n} - 2px);`;
+      ev.title=`${fmtT(s)} – ${fmtT(en)}`;ev.innerHTML=`${esc(e.title)}<span class="wt">${fmtT(s)}${ht>=48?'<br>–'+fmtT(en):''}</span>`;ev.onclick=()=>showDetail(e);col.appendChild(ev);
     });
     dc.appendChild(col);
   }
