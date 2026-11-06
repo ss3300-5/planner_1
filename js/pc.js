@@ -1,4 +1,4 @@
-/* PC版UI（ダッシュボード）。データ層は storage.js / core.js を共有する */
+/* PC版UI（ダッシュボード）。データ層は storage.js / core.js / series.js を共有する */
 const $=id=>document.getElementById(id);
 const PCOL={important:'#e5384f',star:'#f59e0b',work:'#0077b6',personal:'#7b5ea7',health:'#1fa855'};
 const TITLES={dash:'ダッシュボード',cal:'カレンダー',todo:'TODO ＆ メモ',claude:'Claudeの進捗状況'};
@@ -7,6 +7,8 @@ let page='dash',calMode='week',folderFilter='',EV={};
 const colOf=e=>PCOL[e.folder]||'#8a98ad';
 const wk=d=>{const s=new Date(d);s.setDate(d.getDate()-d.getDay());s.setHours(0,0,0,0);return s;};
 const reg=e=>{const k=e.id+'|'+e.start;EV[k]=e;return k;};
+const KN=['〇','一','二','三','四','五','六','七','八','九'];
+const kan=n=>n<10?KN[n]:(n<20?'十':KN[Math.floor(n/10)]+'十')+(n%10?KN[n%10]:'');
 function range(f,t){return expand(f,t).filter(e=>!folderFilter||e.folder===folderFilter).sort((a,b)=>pD(a.start)-pD(b.start));}
 function dayEvs(d){const f=new Date(d);f.setHours(0,0,0,0);const t=new Date(d);t.setHours(23,59,59,999);return range(f,t).filter(e=>sameDay(pD(e.start),d));}
 
@@ -15,6 +17,13 @@ function openModal(id){$(id).classList.add('open');}
 function closeModal(id){$(id).classList.remove('open');}
 function ovClose(e,id){if(e.target===$(id))closeModal(id);}
 function dlg(title,html){$('dlgTitle').textContent=title;$('dlgBody').innerHTML=html;openModal('dlg');}
+
+/* 進捗の輪（先端に琥珀色の印） */
+function ringSVG(pct,txt){
+  const C=389.6,a=pct/100*2*Math.PI,x=(75+62*Math.sin(a)).toFixed(1),y=(75-62*Math.cos(a)).toFixed(1);
+  return `<svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="62" fill="none" stroke="#caf0f8" stroke-width="12"/><circle cx="75" cy="75" r="62" fill="none" stroke="#0077b6" stroke-width="12" stroke-linecap="round" stroke-dasharray="${(C*pct/100).toFixed(1)} ${C}" transform="rotate(-90 75 75)"/>${pct>0?`<circle cx="${x}" cy="${y}" r="6" fill="#ffb703"/>`:''}${txt?`<text x="75" y="88" text-anchor="middle" font-family="Cormorant Garamond,serif" font-style="italic" font-weight="700" font-size="40" fill="#03045e">${pct}%</text>`:''}</svg>`;
+}
+const avgPct=()=>S.cps.length?Math.round(S.cps.reduce((a,p)=>a+p.pct,0)/S.cps.length):0;
 
 /* 画面切替 */
 function showPage(p){
@@ -32,8 +41,9 @@ function renderSide(){
   const open=S.todos.filter(t=>!t.done).length,today=dayEvs(new Date()).length;
   $('bTodo').textContent=open;$('bTodo').style.display=open?'':'none';
   $('bCal').textContent=today;$('bCal').style.display=today?'':'none';
-  $('folders').innerHTML=`<a class="${folderFilter?'':'on'}" onclick="setFolder('')">すべて</a>`+Object.entries(FOLDERS).map(([k,f])=>`<a class="${folderFilter===k?'on':''}" onclick="setFolder('${k}')"><i style="background:${PCOL[k]}"></i>${f.label}<em>${S.events.filter(e=>e.folder===k).length}</em></a>`).join('');
+  $('folders').innerHTML=`<li><a class="${folderFilter?'':'on'}" onclick="setFolder('')">すべて</a></li>`+Object.entries(FOLDERS).map(([k,f])=>`<li><a class="${folderFilter===k?'on':''}" onclick="setFolder('${k}')"><span class="d" style="--c:${PCOL[k]}"></span>${f.label}<em>${S.events.filter(e=>e.folder===k).length}</em></a></li>`).join('');
 }
+function updateDateBar(){const n=new Date();$('dateBar').textContent=`${n.getFullYear()}年${n.getMonth()+1}/${n.getDate()} ${n.getHours()}:${pad(n.getMinutes())}`;}
 
 /* ダッシュボード */
 function nowNext(){
@@ -43,30 +53,58 @@ function nowNext(){
   for(const e of l){if(pD(e.start)>n){nx=e;break;}}
   return[cur,nx];
 }
-const evRow=e=>`<div class="row" onclick="evDetail('${reg(e)}')"><i style="background:${colOf(e)}"></i><div><b>${esc(e.title)}</b><small>${fmtT(pD(e.start))} – ${fmtT(pD(e.end))}${e.folder?' ・'+FOLDERS[e.folder].label:''}</small></div></div>`;
-const todoRow=t=>{const d=dueInfo(t);return `<div class="row todo"><span class="chk ${t.done?'on':''}" onclick="togTodo('${t.id}')"></span><div class="${t.done?'done':''}"><b>${esc(t.text)}</b></div><label class="due ${d.cls}">${d.label}<input type="date" value="${t.due||''}" onchange="setDue('${t.id}',this.value)"></label><button class="x" onclick="delTodo('${t.id}')">×</button></div>`;};
-const dueRow=t=>`<div class="row todo"><i style="background:var(--ink);border-radius:2px"></i><div><b>${esc(t.text)}</b><small>期限のTODO</small></div></div>`;
-const cpRows=edit=>S.cps.map(p=>`<div class="cp"><div class="cp-t"><b>${esc(p.name)}</b><span>${p.pct}%</span>${edit?`<button class="x" onclick="cpDel('${p.id}')">×</button>`:''}</div><div class="bar"><u style="width:${p.pct}%"></u></div>${p.note?`<small class="mute">${esc(p.note)}</small>`:''}</div>`).join('')||'<p class="mute">進捗はありません</p>';
+const todoLi=(t,del)=>{const d=dueInfo(t);return `<li class="${t.done?'done':''}"><i class="cb${t.done?' on':''}" onclick="togTodo('${t.id}')">${t.done?'<svg class="i"><use href="#ck"/></svg>':''}</i><span>${esc(t.text)}</span>${(t.due||del)?`<label class="due ${d.cls}">${d.label}<input type="date" value="${t.due||''}" onchange="setDue('${t.id}',this.value)"></label>`:''}${del?`<button class="x" onclick="delTodo('${t.id}')">×</button>`:''}</li>`;};
+const cpRows=edit=>S.cps.map(p=>`<div class="pj"><div><b>${esc(p.name)}</b><span class="n">${p.pct}%</span>${edit?`<button class="x" onclick="cpDel('${p.id}')">×</button>`:''}</div><div class="bar"><i style="width:${p.pct}%"></i></div>${p.note?`<small>${esc(p.note)}</small>`:''}</div>`).join('')||'<p class="mute">進捗はありません</p>';
+function usageHTML(){const t=S.tokens||(S.tokens={used:0,max:500000,apiUsed:0,apiMax:1000});return `<div class="use"><p>トークン使用状況<span><b>${t.used.toLocaleString()}</b> / ${t.max.toLocaleString()}</span></p><p>API使用量<span><b>${t.apiUsed.toLocaleString()}</b> / ${t.apiMax.toLocaleString()}</span></p></div>`;}
+
+/* 今週（7:00〜20:00。高さは画面に合わせて伸縮、重なる予定は横に並ぶ） */
+function dashWeek(){
+  const ws=wk(new Date()),we=new Date(ws);we.setDate(we.getDate()+7);const l=range(ws,we),today=new Date(),TOT=13*60;
+  let head='<div class="wkh"><span></span>',cols='';
+  for(let i=0;i<7;i++){
+    const d=new Date(ws);d.setDate(ws.getDate()+i);
+    head+=`<div class="${sameDay(d,today)?'t':''}"><small>${DJ[i]}</small><b>${d.getDate()}</b></div>`;
+    const its=l.filter(e=>sameDay(pD(e.start),d)).map(e=>{const s=pD(e.start),en=pD(e.end);return{ev:e,s,e:en,a:Math.max(0,(s.getHours()-7)*60+s.getMinutes()),b:Math.min(TOT,(en.getHours()-7)*60+en.getMinutes()+(sameDay(en,d)?0:1440))};}).filter(x=>x.b>0&&x.a<TOT);
+    layoutCols(its);
+    cols+=`<div class="c" onclick="wkClick(event,${d.getTime()})">`+its.map(it=>{const e=it.ev,du=it.b-it.a;return `<div class="e" style="--c:${colOf(e)};top:${(it.a/TOT*100).toFixed(3)}%;height:calc(${(du/TOT*100).toFixed(3)}% - 2px);left:calc(${it._c} * 100% / ${it._n} + 3px);width:calc(100% / ${it._n} - 6px);right:auto" onclick="event.stopPropagation();evDetail('${reg(e)}')">${esc(e.title)}${du>=60&&it._n===1?`<small>${fmtT(it.s)} – ${fmtT(it.e)}</small>`:''}</div>`;}).join('');
+    if(sameDay(d,today)){const m=(today.getHours()-7)*60+today.getMinutes();if(m>=0&&m<=TOT)cols+=`<div class="nowl" style="top:${(m/TOT*100).toFixed(3)}%"></div>`;}
+    cols+='</div>';
+  }
+  const hours='<div class="h">'+[...Array(13)].map((_,i)=>`<b style="top:${(i/13*100).toFixed(3)}%">${7+i}:00</b>`).join('')+'</div>';
+  return head+'</div><div class="wkb">'+hours+cols+'</div>';
+}
+function wkClick(ev,ts){const r=ev.currentTarget.getBoundingClientRect(),h=7+Math.floor((ev.clientY-r.top)/r.height*13);evDlg(new Date(ts),Math.min(19,Math.max(7,h)));}
+
 function renderDash(){
-  const [cur,nx]=nowNext();
-  const big=(cls,label,e)=>`<div class="card ${cls}" ${e?`onclick="evDetail('${reg(e)}')"`:''}><span class="lbl">${label}</span>${e?`<h3>${esc(e.title)}</h3><p>${fmtD(pD(e.start))} ${fmtT(pD(e.start))} – ${fmtT(pD(e.end))}</p>`:'<h3 class="mute">予定なし</h3>'}</div>`;
-  const open=S.todos.filter(t=>!t.done),avg=S.cps.length?Math.round(S.cps.reduce((a,p)=>a+p.pct,0)/S.cps.length):0;
-  $('p-dash').innerHTML=`<div class="grid4">${big('hero','今の予定',cur)}${big('','次の予定',nx)}
-    <div class="card" onclick="showPage('todo')"><span class="lbl">TODO</span><h3>${open.length}<small> 件 未完了</small></h3><p>${esc(open[0]?open[0].text:'タスクなし')}</p></div>
-    <div class="card" onclick="showPage('claude')"><span class="lbl">Claude</span><h3>${avg}<small> % 平均進捗</small></h3><div class="bar"><u style="width:${avg}%"></u></div></div></div>
-    <div class="grid2">
-    <div class="card"><div class="ch"><b>今日の予定</b><a onclick="showPage('cal')">カレンダーへ</a></div>${(dayEvs(new Date()).map(evRow).join('')+dueTodayTodos().map(dueRow).join(''))||'<p class="mute">予定はありません</p>'}</div>
-    <div class="card"><div class="ch"><b>TODO</b><a onclick="showPage('todo')">すべて見る</a></div>${sortTodos(open).slice(0,6).map(todoRow).join('')||'<p class="mute">タスクなし</p>'}</div>
-    <div class="card"><div class="ch"><b>Claudeの進捗状況</b><a onclick="showPage('claude')">詳細</a></div>${cpRows(false)}</div>
-    <div class="card"><div class="ch"><b>メモ</b><a onclick="showPage('todo')">編集</a></div><p class="memo">${esc(S.memo||'')}</p></div></div>`;
+  const n=new Date(),[cur,nx]=nowNext(),day=dayEvs(n),dues=dueTodayTodos(),open=S.todos.filter(t=>!t.done);
+  const dv=`<p class="date"><span>${kan(n.getMonth()+1)}月${kan(n.getDate())}日</span><span>${DJ[n.getDay()]}曜日</span></p>`;
+  let hero='<p class="tag">いま</p><h2>いまの予定は<br>ありません</h2>';
+  if(cur){const s=pD(cur.start),e=pD(cur.end),pc=Math.min(100,Math.max(0,(n-s)/(e-s)*100)),left=Math.max(0,Math.round((e-n)/60000));
+    hero=`<p class="tag">いま</p><h2 style="font-size:${cur.title.length>10?26:36}px">${esc(cur.title)}</h2><p class="tm">${fmtT(s)} – ${fmtT(e)}<span>あと${left}分</span></p><div class="track"><b style="width:${pc}%"></b></div>`;}
+  const next=nx?`<small>つぎ</small><span class="t">${sameDay(pD(nx.start),n)?'':(pD(nx.start).getMonth()+1)+'/'+pD(nx.start).getDate()+' '}${fmtT(pD(nx.start))}</span><b>${esc(nx.title)}</b>`:'<small>つぎ</small><b>予定はありません</b>';
+  const rows=[...day.map(e=>{const s=pD(e.start),en=pD(e.end);return `<li class="${en<n?'done':(s<=n&&en>=n?'now':'')}" style="--c:${colOf(e)}" onclick="evDetail('${reg(e)}')"><time>${s.getHours()}:${pad(s.getMinutes())}</time><span>${esc(e.title)}</span></li>`;}),
+    ...dues.map(t=>`<li class="tdue"><time>期限</time><span>${esc(t.text)}</span></li>`)];
+  const more=rows.length-4;
+  const wsd=wk(n),wed=new Date(wsd);wed.setDate(wed.getDate()+6);
+  $('p-dash').innerHTML=`<div class="grid"><div class="L"><div class="top">
+    <section class="hero"><div class="bg"></div><div class="in" ${cur?`onclick="evDetail('${reg(cur)}')"`:''}>${hero}</div>${dv}<div class="next" ${nx?`onclick="evDetail('${reg(nx)}')"`:''}>${next}</div></section>
+    <section class="pn a today"><h3>きょうの予定<span>${n.getMonth()+1}/${n.getDate()}</span></h3><ol class="rail">${rows.slice(0,4).join('')||'<li><span class="mute">予定はありません</span></li>'}</ol>${more>0?`<p class="more">他 ${more} 件　<a onclick="showPage('cal')">カレンダーで見る</a></p>`:''}</section>
+  </div>
+  <section class="pn a wk"><h3>今週<span>${wsd.getMonth()+1}/${wsd.getDate()} – ${wed.getMonth()+1}/${wed.getDate()}</span></h3>${dashWeek()}</section></div>
+  <div class="R">
+    <section class="pn b cl" onclick="showPage('claude')"><h3>Claudeの進捗状況</h3><div class="ring">${ringSVG(avgPct(),true)}<p>${S.cps.length?`${S.cps.length}つの作業が<br>進んでいます`:'進行中の作業は<br>ありません'}<small>全体の進捗</small></p></div>${S.cps.slice(0,2).map(p=>`<div class="pj"><div><b>${esc(p.name)}</b><span class="n">${p.pct}%</span></div><div class="bar"><i style="width:${p.pct}%"></i></div>${p.note?`<small>${esc(p.note)}</small>`:''}</div>`).join('')}${usageHTML()}</section>
+    <section class="pn b td"><h3>TODO<span>${open.length}件</span></h3><ul class="tdl">${sortTodos(S.todos).slice(0,5).map(t=>todoLi(t,false)).join('')||'<li><span class="mute">タスクなし</span></li>'}</ul><div class="add" onclick="newItem('todo')"><svg class="i"><use href="#pl"/></svg>タスクを追加</div></section>
+    <section class="memo" onclick="showPage('todo')"><h3>メモ</h3><p>${esc(S.memo||'').replace(/\n/g,'<br>')||'<span class="mute">メモはありません</span>'}</p></section>
+  </div></div>`;
 }
 
-/* カレンダー */
+/* カレンダー（週は24時間をスクロール、月は6週分） */
 function calNav(n){if(calMode==='week')viewDate.setDate(viewDate.getDate()+7*n);else{viewDate.setDate(1);viewDate.setMonth(viewDate.getMonth()+n);}renderCal();}
 function renderCal(){
-  $('p-cal').innerHTML=`<div class="card"><div class="ch cal-h"><div><button class="btn btn-ghost sm" onclick="calNav(-1)">‹</button><button class="btn btn-ghost sm" onclick="viewDate=new Date();renderCal()">今日</button><button class="btn btn-ghost sm" onclick="calNav(1)">›</button></div><b>${viewDate.getFullYear()}年${viewDate.getMonth()+1}月</b></div>${calMode==='week'?weekHTML():monthHTML()}</div>`;
+  $('p-cal').innerHTML=`<section class="pn a"><div class="ch cal-h"><div><button class="btn btn-ghost sm" onclick="calNav(-1)">‹</button><button class="btn btn-ghost sm" onclick="viewDate=new Date();renderCal()">今日</button><button class="btn btn-ghost sm" onclick="calNav(1)">›</button></div><b class="cal-t">${viewDate.getFullYear()}年${viewDate.getMonth()+1}月</b></div>${calMode==='week'?weekHTML():monthHTML()}</section>`;
   const s=$('wkScroll');if(s)s.scrollTop=7*48;
 }
+
 function weekHTML(){
   const ws=wk(viewDate),we=new Date(ws);we.setDate(we.getDate()+7);const l=range(ws,we),today=new Date(),H=48;
   let h='<div class="wk-h"><span></span>';
@@ -92,6 +130,7 @@ function monthHTML(){
   }
   return h+'</div>';
 }
+
 
 /* 予定の作成・編集・詳細・削除（繰り返しは「この回だけ／期間／すべて」を選べる）*/
 const scopeHTML=(n,label,occ,until)=>`<div class="fg"><label>${label}</label><label class="rd"><input type="radio" name="${n}" value="one" checked onchange="scChg('${n}')"> この回だけ</label><label class="rd"><input type="radio" name="${n}" value="range" onchange="scChg('${n}')"> 期間を指定</label><div class="two" id="${n}R" style="display:none"><div class="fg"><label>開始日</label><input class="finput" type="date" id="${n}From" value="${occ}"></div><div class="fg"><label>終了日</label><input class="finput" type="date" id="${n}To" value="${until||occ}"></div></div><label class="rd"><input type="radio" name="${n}" value="all" onchange="scChg('${n}')"> すべての回</label></div>`;
@@ -157,24 +196,36 @@ function delGo(id,o){
 }
 
 /* TODO・メモ（期限つき）*/
-function renderTodo(){$('todoList').innerHTML=sortTodos(S.todos).map(todoRow).join('')||'<p class="mute">TODOはありません</p>';if(document.activeElement!==$('memoText'))$('memoText').value=S.memo||'';}
+function renderTodo(){$('todoList').innerHTML=S.todos.length?`<ul class="tdl">${sortTodos(S.todos).map(t=>todoLi(t,true)).join('')}</ul>`:'<p class="mute">TODOはありません</p>';if(document.activeElement!==$('memoText'))$('memoText').value=S.memo||'';}
 function addTodo(){const v=$('todoInput').value.trim();if(!v)return;S.todos.push({id:gid(),text:v,note:'',done:false,due:$('todoDue').value||''});$('todoInput').value='';$('todoDue').value='';save();showPage();}
 function setDue(id,v){const t=S.todos.find(x=>x.id===id);if(t){t.due=v||'';save();showPage();}}
 function togTodo(id){const t=S.todos.find(x=>x.id===id);if(t){t.done=!t.done;save();showPage();}}
 function delTodo(id){S.todos=S.todos.filter(x=>x.id!==id);save();showPage();}
 function saveMemo(b){S.memo=$('memoText').value;save();b.textContent='保存しました';setTimeout(()=>b.textContent='保存',1200);}
 
+
 /* Claude進捗 */
 function renderClaude(){
-  const t=S.tokens||(S.tokens={used:0,max:500000,apiUsed:0,apiMax:1000}),pc=(a,b)=>Math.min(100,Math.round(a/(b||1)*100));
-  $('p-claude').innerHTML=`<div class="grid2 g2"><div class="card"><div class="ch"><b>進捗</b><a onclick="cpDlg()">＋ 追加</a></div>${cpRows(true)}</div>
-  <div class="col"><div class="card" onclick="tokEdit()"><span class="lbl">トークン使用状況</span><h3>${t.used.toLocaleString()}<small> / ${t.max.toLocaleString()}</small></h3><div class="bar"><u style="width:${pc(t.used,t.max)}%"></u></div></div>
-  <div class="card" onclick="tokEdit()"><span class="lbl">API使用量</span><h3>${t.apiUsed.toLocaleString()}<small> / ${t.apiMax.toLocaleString()}</small></h3><div class="bar"><u style="width:${pc(t.apiUsed,t.apiMax)}%"></u></div></div></div></div>`;
+  const open=S.todos.filter(t=>!t.done);
+  $('p-claude').innerHTML=`<div class="g2p"><section class="pn a"><h3>進捗<span><a onclick="cpDlg()">＋ 追加</a></span></h3><div class="ring">${ringSVG(avgPct(),true)}<p>${S.cps.length?`${S.cps.length}つの作業が<br>進んでいます`:'進行中の作業は<br>ありません'}<small>全体の進捗</small></p></div>${cpRows(true)}</section>
+  <div class="col"><section class="pn b" onclick="tokEdit()"><h3>使用状況</h3>${usageHTML()}<p class="mute" style="margin-top:8px">クリックして数値を更新できます</p></section>
+  <section class="pn b" onclick="showPage('todo')"><h3>TODO<span>${open.length}件</span></h3><ul class="tdl">${sortTodos(S.todos).filter(t=>!t.done).slice(0,5).map(t=>todoLi(t,false)).join('')||'<li><span class="mute">タスクなし</span></li>'}</ul></section></div></div>`;
 }
 function tokEdit(){const t=S.tokens,g=(m,v)=>{const r=prompt(m,v);return r===null?v:(parseInt(r)||0);};t.used=g('トークン使用数',t.used);t.max=g('トークン上限',t.max);t.apiUsed=g('APIリクエスト数',t.apiUsed);t.apiMax=g('APIリクエスト上限',t.apiMax);save();renderClaude();}
 function cpDlg(){dlg('プロジェクトを追加',`<div class="fg"><label>プロジェクト名</label><input class="finput" id="cName"></div><div class="fg"><label>進捗 <span id="cPl">0</span>%</label><input type="range" id="cPct" min="0" max="100" value="0" style="width:100%" oninput="$('cPl').textContent=this.value"></div><div class="fg"><label>メモ</label><input class="finput" id="cNote"></div><div class="btn-row"><button class="btn btn-ghost" onclick="closeModal('dlg')">キャンセル</button><button class="btn btn-prim" onclick="cpSave()">保存</button></div>`);}
 function cpSave(){const n=$('cName').value.trim();if(!n)return;S.cps.push({id:gid(),name:n,pct:+$('cPct').value,note:$('cNote').value.trim()});save();closeModal('dlg');showPage();}
 function cpDel(id){S.cps=S.cps.filter(p=>p.id!==id);save();showPage();}
+
+
+/* 通知・フォルダーの一覧 */
+function notifDlg(){
+  const n=new Date(),to=new Date(n);to.setDate(to.getDate()+7);
+  const l=expand(n,to).filter(e=>e.notif&&pD(e.end)>=n).sort((a,b)=>pD(a.start)-pD(b.start));
+  dlg('通知（7日以内の予定）',l.map(e=>`<div class="nrow" onclick="closeModal('dlg');evDetail('${reg(e)}')"><b>${esc(e.title)}</b><small>${fmtD(pD(e.start))} ${fmtT(pD(e.start))}</small></div>`).join('')||'<p class="mute">通知する予定はありません</p>');
+}
+function folderDlg(){
+  dlg('フォルダー',`<div class="nrow" onclick="closeModal('dlg');setFolder('')"><b>すべて</b><small>${S.events.length}件</small></div>`+Object.entries(FOLDERS).map(([k,f])=>`<div class="nrow" onclick="closeModal('dlg');setFolder('${k}')"><b><span class="d" style="--c:${PCOL[k]}"></span> ${f.label}</b><small>${S.events.filter(e=>e.folder===k).length}件</small></div>`).join(''));
+}
 
 /* 新規作成メニュー・起動 */
 function toggleNew(e){e.stopPropagation();$('newMenu').classList.toggle('open');}
@@ -185,7 +236,8 @@ function newItem(k){
 document.addEventListener('click',()=>$('newMenu').classList.remove('open'));
 $('todoInput').addEventListener('keydown',e=>{if(e.key==='Enter')addTodo();});
 $('memoText').value=S.memo||'';
+updateDateBar();
 showPage('dash');
 Store.start();
-setInterval(()=>{if(page==='dash')renderDash();},60000);
+setInterval(()=>{updateDateBar();if(page==='dash')renderDash();},60000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Store.user)Store.sync();});
