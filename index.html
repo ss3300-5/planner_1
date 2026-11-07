@@ -44,6 +44,7 @@ if(!p&&!m&&window.matchMedia&&matchMedia('(min-width:1024px) and (pointer:fine)'
     <div hidden><button id="vt-day"></button><button id="vt-week"></button><button id="vt-year"></button></div>
     <div class="week" id="weekDaysRow"></div>
     <div class="cal-scroll" id="calScroll">
+      <div class="due-lane" id="dueLane" style="display:none"></div>
       <div class="time-grid" id="timeGrid"></div>
       <div id="weekGridWrap" style="display:none"></div>
       <div class="year-body" id="yearBody" style="display:none"></div>
@@ -107,10 +108,11 @@ if(!p&&!m&&window.matchMedia&&matchMedia('(min-width:1024px) and (pointer:fine)'
     </div>
     <div class="modal-body">
       <div class="fg" id="scopeBox" style="display:none"><label>変更の範囲</label>
-        <label class="rd"><input type="radio" name="evScope" value="one" checked onchange="scopeChange()"><span>この回だけ</span></label>
-        <label class="rd"><input type="radio" name="evScope" value="range" onchange="scopeChange()"><span>期間を指定</span></label>
+        <label class="rd"><input type="radio" name="evScope" value="all" onchange="scopeChange()"><span>すべて</span></label>
+        <label class="rd"><input type="radio" name="evScope" value="one" checked onchange="scopeChange()"><span>この回のみ</span></label>
+        <label class="rd"><input type="radio" name="evScope" value="range" onchange="scopeChange()"><span>指定期間内</span></label>
         <div class="two" id="scRange" style="display:none"><div><small>開始日</small><input class="finput" type="date" id="scFrom"></div><div><small>終了日</small><input class="finput" type="date" id="scTo"></div></div>
-        <label class="rd"><input type="radio" name="evScope" value="all" onchange="scopeChange()"><span>すべての回</span></label>
+        <label class="rd"><input type="radio" name="evScope" value="from" onchange="scopeChange()"><span>この日からすべて</span></label>
       </div>
       <div class="fg"><label>タイトル</label><input class="finput" id="evTitle" placeholder="予定のタイトル" type="text"></div>
       <div class="fg"><label>開始</label><input class="finput" id="evStart" type="datetime-local"></div>
@@ -165,10 +167,11 @@ if(!p&&!m&&window.matchMedia&&matchMedia('(min-width:1024px) and (pointer:fine)'
       <div style="font-size:16px;font-weight:700;color:var(--t1);margin-bottom:6px">予定を削除しますか？</div>
       <div style="font-size:13px;color:var(--t2);margin-bottom:22px" id="delTitle"></div>
       <div id="dScope" style="display:none;text-align:left;margin:-10px 0 18px">
-        <label class="rd"><input type="radio" name="delScope" value="one" checked onchange="delScopeChange()"><span>この回だけ</span></label>
-        <label class="rd"><input type="radio" name="delScope" value="range" onchange="delScopeChange()"><span>期間を指定</span></label>
+        <label class="rd"><input type="radio" name="delScope" value="all" onchange="delScopeChange()"><span>すべて</span></label>
+        <label class="rd"><input type="radio" name="delScope" value="one" checked onchange="delScopeChange()"><span>この回のみ</span></label>
+        <label class="rd"><input type="radio" name="delScope" value="range" onchange="delScopeChange()"><span>指定期間内</span></label>
         <div class="two" id="dRange" style="display:none"><div><small>開始日</small><input class="finput" type="date" id="dFrom"></div><div><small>終了日</small><input class="finput" type="date" id="dTo"></div></div>
-        <label class="rd"><input type="radio" name="delScope" value="all" onchange="delScopeChange()"><span>すべての回</span></label>
+        <label class="rd"><input type="radio" name="delScope" value="from" onchange="delScopeChange()"><span>この日からすべて</span></label>
       </div>
       <div style="display:flex;gap:10px">
         <button class="btn btn-ghost" style="flex:1" onclick="closeModal('delModal')">キャンセル</button>
