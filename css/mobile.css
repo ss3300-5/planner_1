@@ -180,3 +180,14 @@ button{font:inherit;color:inherit;cursor:pointer}
 .rail .tdue::before{border-radius:2px;background:var(--ink)}.rail .tdue time{font:700 13px var(--ja)}
 .fg .rd{display:flex;margin-bottom:0;font-size:14px;color:var(--ink)}
 .todo-in .t-input{min-width:0}.t-due{flex:none;width:112px}.t-add-btn{flex:none;white-space:nowrap}
+
+/* 期限つきTODOのカレンダー表示 */
+.due-lane{position:sticky;top:0;z-index:6;background:var(--paper);border-bottom:1px solid var(--line)}
+.due-lane.day{display:flex;align-items:flex-start;gap:10px;padding:8px 22px}
+.due-lane.week{display:grid;grid-template-columns:46px repeat(7,minmax(0,1fr));padding:6px 0}
+.dl-l{align-self:center;padding-left:8px;font-size:11px;font-weight:800;color:var(--sub)}.due-lane.day .dl-l{padding:0}
+.dl-c{display:flex;flex-direction:column;gap:3px;min-width:0;padding:0 2px}.due-lane.day .dl-c{flex-direction:row;flex-wrap:wrap;gap:6px}.dl-c small{font-size:10px;color:var(--sub)}
+.dchip{display:flex;align-items:center;gap:5px;max-width:100%;padding:2px 7px;font:700 11px/1.4 var(--ja);color:var(--ink);text-align:left;background:var(--foam);border:1px solid var(--sea);border-radius:10px 10px 4px 10px}
+.dchip span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dchip .cb{width:12px;height:12px;margin:0;border-width:1.3px}.dchip .cb .i{width:9px;height:9px}
+.dchip.done{opacity:.55;text-decoration:line-through}
+.due-lane.week .dchip{font-size:10px;padding:1px 4px;gap:3px}.due-lane.week .dchip .cb{display:none}

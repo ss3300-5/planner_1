@@ -159,3 +159,13 @@ main{min-width:0;padding:0 40px 56px}
 .row.todo .x{margin-left:6px}
 
 .fg .rd{display:flex;align-items:center;gap:8px;margin:0;font-size:14px;font-weight:500;color:var(--ink)}
+
+/* 期限つきTODOのカレンダー表示 */
+.wkd,.wk-d{display:grid;align-items:start;padding:6px 0 8px;border-bottom:1px solid var(--line)}
+.wkd{grid-template-columns:48px repeat(7,minmax(0,1fr))}.wk-d{grid-template-columns:56px repeat(7,minmax(0,1fr))}
+.wkd>span,.wk-d>span{align-self:center;padding-right:10px;font-size:11px;font-weight:800;text-align:right;color:var(--sub)}
+.wkd>div,.wk-d>div{display:flex;flex-direction:column;gap:3px;min-width:0;padding:0 3px}
+.dchip{display:flex;align-items:center;gap:5px;max-width:100%;padding:2px 7px;font:700 11px/1.4 var(--ja);color:var(--ink);text-align:left;cursor:pointer;background:var(--foam);border:1px solid var(--sea);border-radius:10px 10px 4px 10px}
+.dchip span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dchip .cb{width:12px;height:12px;margin:0;border-width:1.3px}.dchip .cb .i{width:9px;height:9px}
+.dchip.done{opacity:.55;text-decoration:line-through}
+.chip.tdc{--c:#03045e;cursor:pointer}.chip.tdc::before{content:"□ "}.chip.tdc.done{opacity:.55;text-decoration:line-through}.chip.tdc.done::before{content:"☑ "}
