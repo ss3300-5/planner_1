@@ -68,9 +68,9 @@ function saveEvent(){
         const bs=pD(e.start);bs.setDate(bs.getDate()+delta);const ns=pD(start);bs.setHours(ns.getHours(),ns.getMinutes(),0,0);
         applyScope(editId,'all',null,null,{...f,start:localISO(bs),end:localISO(new Date(bs.getTime()+(pD(end)-pD(start)))),repeat:rep,until});
       }else{
-        const fr=sc==='one'?editOcc:$e('scFrom').value,to=sc==='one'?editOcc:$e('scTo').value;
-        if(!fr||!to||fr>to){alert('期間の開始日と終了日を正しく入れてください');return;}
-        applyScope(editId,sc,fr,to,f);
+        const fr=sc==='range'?$e('scFrom').value:editOcc,to=sc==='range'?$e('scTo').value:editOcc;
+        if(sc==='range'&&(!fr||!to||fr>to)){alert('期間の開始日と終了日を正しく入れてください');return;}
+        applyScope(editId,sc,fr,sc==='from'?null:to,f);
       }
     }else applyScope(editId,'all',null,null,{...f,repeat:rep,until});
   }
@@ -91,9 +91,9 @@ function doDelete(){
   const e=S.events.find(x=>x.id===editId);
   if(recurring(e)){
     const r=document.querySelector('input[name=delScope]:checked'),sc=r?r.value:'all';
-    const fr=sc==='one'?editOcc:$e('dFrom').value,to=sc==='one'?editOcc:$e('dTo').value;
+    const fr=sc==='range'?$e('dFrom').value:editOcc,to=sc==='range'?$e('dTo').value:editOcc;
     if(sc==='range'&&(!fr||!to||fr>to)){alert('期間の開始日と終了日を正しく入れてください');return;}
-    applyScope(editId,sc,fr,to,null);
+    applyScope(editId,sc,fr,sc==='from'?null:to,null);
   }else applyScope(editId,'all',null,null,null);
   editId=null;save();closeModal('delModal');closeModal('addEventModal');refreshAfterEvent();
 }

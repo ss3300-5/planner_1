@@ -30,18 +30,20 @@ function splitSeries(e,fromD,toD){
   if(A.length){const s=A[0];after={...e,id:gid(),start:localISO(s),end:localISO(new Date(s.getTime()+dur))};if(A.length===1&&e.until){after.repeat='none';after.until='';}}
   return{before,M,after};
 }
-/* scope: 'one'=この回だけ / 'range'=from〜to / 'all'=すべて。ch=null なら削除 */
+/* scope: 'all'=すべて / 'one'=この回のみ / 'range'=指定期間内(from〜to) / 'from'=この日からすべて。ch=null なら削除 */
 function applyScope(id,scope,from,to,ch){
   const i=S.events.findIndex(x=>x.id===id);if(i<0)return;const e=S.events[i];
   if(scope==='all'||!recurring(e)){if(ch)S.events[i]={...e,...ch};else S.events.splice(i,1);return;}
+  const open=scope==='from'&&!e.until;           // この日から先すべて（終了日なしなら、先も続く）
+  if(scope==='from')to=e.until||'9999-12-31';
   const {before,M,after}=splitSeries(e,from,to),out=[];
   if(before)out.push(before);
   if(ch&&M.length){
     if(scope==='one')out.push({...e,...ch,id:gid(),repeat:'none',until:''});
     else{
       const t0=pD(ch.start),dn=pD(ch.end)-t0,st=new Date(M[0]);st.setHours(t0.getHours(),t0.getMinutes(),0,0);
-      const many=M.length>1;
-      out.push({...e,...ch,id:gid(),start:localISO(st),end:localISO(new Date(st.getTime()+dn)),repeat:many?e.repeat:'none',until:many?dayStr(M[M.length-1]):''});
+      const many=M.length>1||open;
+      out.push({...e,...ch,id:gid(),start:localISO(st),end:localISO(new Date(st.getTime()+dn)),repeat:many?e.repeat:'none',until:many?(open?'':dayStr(M[M.length-1])):''});
     }
   }
   if(after)out.push(after);

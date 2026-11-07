@@ -57,6 +57,15 @@ const todoLi=(t,del)=>{const d=dueInfo(t);return `<li class="${t.done?'done':''}
 const cpRows=edit=>S.cps.map(p=>`<div class="pj"><div><b>${esc(p.name)}</b><span class="n">${p.pct}%</span>${edit?`<button class="x" onclick="cpDel('${p.id}')">×</button>`:''}</div><div class="bar"><i style="width:${p.pct}%"></i></div>${p.note?`<small>${esc(p.note)}</small>`:''}</div>`).join('')||'<p class="mute">進捗はありません</p>';
 function usageHTML(){const t=S.tokens||(S.tokens={used:0,max:500000,apiUsed:0,apiMax:1000});return `<div class="use"><p>トークン使用状況<span><b>${t.used.toLocaleString()}</b> / ${t.max.toLocaleString()}</span></p><p>API使用量<span><b>${t.apiUsed.toLocaleString()}</b> / ${t.apiMax.toLocaleString()}</span></p></div>`;}
 
+/* 期限つきTODOをカレンダーに表示（設定した日に出る） */
+const dueChip=t=>`<button class="dchip${t.done?' done':''}" onclick="event.stopPropagation();togTodo('${t.id}')" title="${esc(t.text)}"><i class="cb${t.done?' on':''}">${t.done?'<svg class="i"><use href="#ck"/></svg>':''}</i><span>${esc(t.text)}</span></button>`;
+function dueLane(ws,cls){
+  const cells=[...Array(7)].map((_,i)=>{const d=new Date(ws);d.setDate(ws.getDate()+i);return S.todos.filter(t=>t.due===dayStr(d));});
+  if(!cells.some(l=>l.length))return '';
+  return `<div class="${cls}"><span>期限</span>${cells.map(l=>`<div>${l.slice(0,3).map(dueChip).join('')}${l.length>3?`<small class="mute">+${l.length-3}</small>`:''}</div>`).join('')}</div>`;
+}
+const todoChips=d=>{const l=S.todos.filter(t=>t.due===dayStr(d));return l.slice(0,2).map(t=>`<div class="chip tdc${t.done?' done':''}" onclick="event.stopPropagation();togTodo('${t.id}')" title="期限のTODO">${esc(t.text)}</div>`).join('')+(l.length>2?`<small class="mute">+${l.length-2}</small>`:'');};
+
 /* 今週（7:00〜20:00。高さは画面に合わせて伸縮、重なる予定は横に並ぶ） */
 function dashWeek(){
   const ws=wk(new Date()),we=new Date(ws);we.setDate(we.getDate()+7);const l=range(ws,we),today=new Date(),TOT=13*60;
@@ -71,7 +80,7 @@ function dashWeek(){
     cols+='</div>';
   }
   const hours='<div class="h">'+[...Array(13)].map((_,i)=>`<b style="top:${(i/13*100).toFixed(3)}%">${7+i}:00</b>`).join('')+'</div>';
-  return head+'</div><div class="wkb">'+hours+cols+'</div>';
+  return head+'</div>'+dueLane(ws,'wkd')+'<div class="wkb">'+hours+cols+'</div>';
 }
 function wkClick(ev,ts){const r=ev.currentTarget.getBoundingClientRect(),h=7+Math.floor((ev.clientY-r.top)/r.height*13);evDlg(new Date(ts),Math.min(19,Math.max(7,h)));}
 
@@ -109,7 +118,7 @@ function weekHTML(){
   const ws=wk(viewDate),we=new Date(ws);we.setDate(we.getDate()+7);const l=range(ws,we),today=new Date(),H=48;
   let h='<div class="wk-h"><span></span>';
   for(let i=0;i<7;i++){const d=new Date(ws);d.setDate(ws.getDate()+i);h+=`<div class="${sameDay(d,today)?'today':''}"><small>${DJ[i]}</small><b>${d.getDate()}</b></div>`;}
-  h+='</div><div class="wk-s" id="wkScroll"><div class="wk-g"><div class="wk-t">'+[...Array(25)].map((_,i)=>`<span style="top:${i*H}px">${i}:00</span>`).join('')+'</div>';
+  h+='</div>'+dueLane(ws,'wk-d')+'<div class="wk-s" id="wkScroll"><div class="wk-g"><div class="wk-t">'+[...Array(25)].map((_,i)=>`<span style="top:${i*H}px">${i}:00</span>`).join('')+'</div>';
   for(let i=0;i<7;i++){
     const d=new Date(ws);d.setDate(ws.getDate()+i);
     h+=`<div class="wk-c" style="height:${24*H}px">`+[...Array(24)].map((_,x)=>`<div class="hr" style="height:${H}px" onclick="evDlg(new Date(${d.getTime()}),${x})"></div>`).join('');
@@ -126,14 +135,14 @@ function monthHTML(){
   let h='<div class="mo">'+DJ.map(d=>`<div class="dw">${d}</div>`).join('');
   for(let i=0;i<42;i++){
     const d=new Date(s);d.setDate(s.getDate()+i);const ev=l.filter(x=>sameDay(pD(x.start),d));
-    h+=`<div class="md ${d.getMonth()!==m?'out':''} ${sameDay(d,today)?'today':''}" onclick="evDlg(new Date(${d.getTime()}),9)"><b>${d.getDate()}</b>${ev.slice(0,3).map(x=>`<div class="chip" style="--c:${colOf(x)}" onclick="event.stopPropagation();evDetail('${reg(x)}')">${fmtT(pD(x.start))} ${esc(x.title)}</div>`).join('')}${ev.length>3?`<small class="mute">+${ev.length-3}</small>`:''}</div>`;
+    h+=`<div class="md ${d.getMonth()!==m?'out':''} ${sameDay(d,today)?'today':''}" onclick="evDlg(new Date(${d.getTime()}),9)"><b>${d.getDate()}</b>${ev.slice(0,3).map(x=>`<div class="chip" style="--c:${colOf(x)}" onclick="event.stopPropagation();evDetail('${reg(x)}')">${fmtT(pD(x.start))} ${esc(x.title)}</div>`).join('')}${ev.length>3?`<small class="mute">+${ev.length-3}</small>`:''}${todoChips(d)}</div>`;
   }
   return h+'</div>';
 }
 
 
 /* 予定の作成・編集・詳細・削除（繰り返しは「この回だけ／期間／すべて」を選べる）*/
-const scopeHTML=(n,label,occ,until)=>`<div class="fg"><label>${label}</label><label class="rd"><input type="radio" name="${n}" value="one" checked onchange="scChg('${n}')"> この回だけ</label><label class="rd"><input type="radio" name="${n}" value="range" onchange="scChg('${n}')"> 期間を指定</label><div class="two" id="${n}R" style="display:none"><div class="fg"><label>開始日</label><input class="finput" type="date" id="${n}From" value="${occ}"></div><div class="fg"><label>終了日</label><input class="finput" type="date" id="${n}To" value="${until||occ}"></div></div><label class="rd"><input type="radio" name="${n}" value="all" onchange="scChg('${n}')"> すべての回</label></div>`;
+const scopeHTML=(n,label,occ,until)=>`<div class="fg"><label>${label}</label><label class="rd"><input type="radio" name="${n}" value="all" onchange="scChg('${n}')"> すべて</label><label class="rd"><input type="radio" name="${n}" value="one" checked onchange="scChg('${n}')"> この回のみ</label><label class="rd"><input type="radio" name="${n}" value="range" onchange="scChg('${n}')"> 指定期間内</label><div class="two" id="${n}R" style="display:none"><div class="fg"><label>開始日</label><input class="finput" type="date" id="${n}From" value="${occ}"></div><div class="fg"><label>終了日</label><input class="finput" type="date" id="${n}To" value="${until||occ}"></div></div><label class="rd"><input type="radio" name="${n}" value="from" onchange="scChg('${n}')"> この日からすべて</label></div>`;
 const scVal=n=>document.querySelector(`input[name=${n}]:checked`).value;
 function scChg(n){const v=scVal(n);$(n+'R').style.display=v==='range'?'grid':'none';if(n==='fsc'){const l=v!=='all';$('fRep').disabled=l;$('fUntil').disabled=l;}}
 function repChg(){$('fUntilRow').style.display=$('fRep').value!=='none'?'block':'none';}
@@ -170,9 +179,9 @@ function saveEv(){
         const bs=pD(e.start);bs.setDate(bs.getDate()+delta);const ns=pD(start);bs.setHours(ns.getHours(),ns.getMinutes(),0,0);
         applyScope(edId,'all',null,null,{...f,start:localISO(bs),end:localISO(new Date(bs.getTime()+(pD(end)-pD(start)))),repeat:rep,until});
       }else{
-        const fr=sc==='one'?edOcc:$('fscFrom').value,to=sc==='one'?edOcc:$('fscTo').value;
-        if(!fr||!to||fr>to){alert('期間の開始日と終了日を正しく入れてください');return;}
-        applyScope(edId,sc,fr,to,f);
+        const fr=sc==='range'?$('fscFrom').value:edOcc,to=sc==='range'?$('fscTo').value:edOcc;
+        if(sc==='range'&&(!fr||!to||fr>to)){alert('期間の開始日と終了日を正しく入れてください');return;}
+        applyScope(edId,sc,fr,sc==='from'?null:to,f);
       }
     }else applyScope(edId,'all',null,null,{...f,repeat:rep,until});
   }
@@ -190,9 +199,9 @@ function delDlg(id,occ){
   dlg('予定を削除',`<p class="mute" style="margin-bottom:10px">「${esc(e.title)}」は繰り返し予定です。</p>${scopeHTML('dsc','削除の範囲',o,e.until)}<div class="btn-row"><button class="btn btn-ghost" onclick="closeModal('dlg')">キャンセル</button><button class="btn btn-del" onclick="delGo('${id}','${o}')">削除する</button></div>`);
 }
 function delGo(id,o){
-  const sc=scVal('dsc'),fr=sc==='one'?o:$('dscFrom').value,to=sc==='one'?o:$('dscTo').value;
+  const sc=scVal('dsc'),fr=sc==='range'?$('dscFrom').value:o,to=sc==='range'?$('dscTo').value:o;
   if(sc==='range'&&(!fr||!to||fr>to)){alert('期間の開始日と終了日を正しく入れてください');return;}
-  applyScope(id,sc,fr,to,null);save();closeModal('dlg');showPage();
+  applyScope(id,sc,fr,sc==='from'?null:to,null);save();closeModal('dlg');showPage();
 }
 
 /* TODO・メモ（期限つき）*/

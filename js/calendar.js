@@ -166,7 +166,7 @@ function renderYear(){
   const today=new Date(),c=window._yrCenter||today;
   const base=new Date(c.getFullYear(),c.getMonth(),1);
   const from=new Date(base.getFullYear(),base.getMonth()-24,1),to=new Date(base.getFullYear(),base.getMonth()+36,0);
-  const keys=new Set(expand(from,to).map(e=>pD(e.start).toDateString()));
+  const keys=new Set(expand(from,to).map(e=>pD(e.start).toDateString()));S.todos.forEach(t=>{if(t.due)keys.add(new Date(t.due+'T00:00:00').toDateString());});
   let html=`<div class="yr-dow-row yr-sticky">${DJ.map(d=>`<span>${d}</span>`).join('')}</div>`;
   for(let i=-24;i<36;i++){
     const f=new Date(base.getFullYear(),base.getMonth()+i,1),y=f.getFullYear(),m=f.getMonth(),dim=new Date(y,m+1,0).getDate();
@@ -185,3 +185,18 @@ function renderYear(){
 
 const _rch=renderCalHeader;
 renderCalHeader=function(){_rch();const y=document.getElementById('calYear');if(y)y.textContent=viewDate.getFullYear();};
+
+/* 期限つきTODOを、設定した日に表示する（日表示は1日分、週表示は7日分の「期限」の段） */
+function renderDueLane(){
+  const el=document.getElementById('dueLane');if(!el)return;
+  if(calView==='year'){el.style.display='none';return;}
+  const ws=wkStart(viewDate);
+  const days=calView==='day'?[new Date(viewDate)]:[...Array(7)].map((_,i)=>{const d=new Date(ws);d.setDate(ws.getDate()+i);return d;});
+  const lists=days.map(d=>S.todos.filter(t=>t.due===dayStr(d)));
+  if(!lists.some(l=>l.length)){el.style.display='none';return;}
+  const chip=t=>`<button class="dchip${t.done?' done':''}" onclick="toggleTodo('${t.id}');renderDueLane()" title="${esc(t.text)}"><i class="cb${t.done?' on':''}">${t.done?'<svg class="i"><use href="#ck"/></svg>':''}</i><span>${esc(t.text)}</span></button>`;
+  el.className='due-lane '+calView;
+  el.innerHTML='<span class="dl-l">期限</span>'+(calView==='day'?`<div class="dl-c">${lists[0].map(chip).join('')}</div>`:lists.map(l=>`<div class="dl-c">${l.slice(0,2).map(chip).join('')}${l.length>2?`<small>+${l.length-2}</small>`:''}</div>`).join(''));
+  el.style.display='';
+}
+const _rcg=renderCalGrid;renderCalGrid=function(){_rcg();renderDueLane();};
